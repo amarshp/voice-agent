@@ -19,6 +19,18 @@ def booking_id(phone: str, start_time: str) -> str:
     return "bk_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 
+def _gspread_client(gspread):
+    """Build a gspread client from either a creds file path or raw JSON.
+
+    GOOGLE_SERVICE_ACCOUNT_JSON may be a file path (local dev) OR the full JSON
+    key contents (host env var, e.g. Render — no file to commit).
+    """
+    val = os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"].strip()
+    if val.startswith("{"):
+        return gspread.service_account_from_dict(json.loads(val))
+    return gspread.service_account(filename=val)
+
+
 class Store:
     def add(self, req: BookRequest, created_at: str) -> tuple[Booking, bool]:
         """Return (booking, created). created=False if it already existed."""
@@ -89,10 +101,9 @@ class SheetsStore(Store):
     def __init__(self) -> None:
         import gspread  # imported lazily so dev doesn't need the dep
 
-        key = os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
         sheet_id = os.environ["SHEET_ID"]
         self._lock = threading.Lock()
-        gc = gspread.service_account(filename=key)
+        gc = _gspread_client(gspread)
         self._ws = gc.open_by_key(sheet_id).sheet1
         # Ensure header row exists (RAW so nothing is parsed as a formula).
         if self._ws.row_values(1) != self.COLS:

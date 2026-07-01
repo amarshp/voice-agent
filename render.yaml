@@ -1,0 +1,21 @@
+# Render Blueprint — deploys the tool service. Connect this repo in the Render
+# dashboard (New > Blueprint) and it reads this file.
+services:
+  - type: web
+    name: cali-burrito-tools
+    runtime: python
+    plan: free
+    region: singapore          # closest Render region to India -> lower tool latency
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app:app --app-dir src --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      - key: STORE
+        value: sheets
+      # Set these in the Render dashboard (marked secret, not committed):
+      - key: SHEET_ID
+        sync: false            # paste your spreadsheet id
+      - key: GOOGLE_SERVICE_ACCOUNT_JSON
+        sync: false            # paste the FULL service-account JSON (starts with { )
