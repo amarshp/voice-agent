@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 service-account.json
+ngrok-config.yml
 data/bookings.json
 data/demo_bookings.json
 .pytest_cache/
