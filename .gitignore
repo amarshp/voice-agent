@@ -5,4 +5,5 @@ __pycache__/
 venv/
 service-account.json
 data/bookings.json
+data/demo_bookings.json
 .pytest_cache/
