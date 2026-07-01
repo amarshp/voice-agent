@@ -33,6 +33,33 @@ human phone number. Low volume (few calls/day demo). Cheap ideally ~$0, but
 
 ---
 
+## Build strategy: fork, don't hand-roll (2026 GitHub research)
+
+Indian devs converge on a **cascaded STT→LLM→TTS** pipeline orchestrated by
+**Bolna / Pipecat / LiveKit**, fed **mulaw/alaw audio over a WebSocket** from
+**Exotel or Plivo**, with **Sarvam** for Indic/Hinglish (+ Deepgram English fallback),
+LLM via **LiteLLM → Gemini/Azure**, and business actions as **LLM function-calling
+tools**. Ship self-hosted in Docker. Our Phase-1 tool service = exactly the tools
+you bolt on (book / list / write-sheet / transfer).
+
+| Repo | Stars / License | Fit | Use for |
+|---|---|---|---|
+| **bolna-ai/bolna** | 684 · **MIT** · live | ★ highest | Fork as orchestrator — already has Sarvam+Deepgram+**Exotel+Plivo**+LiteLLM. Self-hosted = you bring your own Exotel → **Udyam KYC, no company, full BYOK** |
+| pipecat-ai/pipecat | 13k · BSD-2 · live | ★ code-first alt | Max control; Sarvam STT/TTS + Exotel/Plivo transports documented. (Check open issue #3783 "Sarvam broken" first) |
+| livekit/agents | 11k · Apache-2 · live | strong transfer | Best built-in SIP **human-transfer**; `livekit-plugins-sarvam`. Heavier infra |
+| sarvamai/sarvam-ai-cookbook | 164 · Apache-2 · official | reference | Correct Sarvam API + telephony codecs (`saaras:v3`, mulaw/alaw) |
+| dograh-hq/dograh | 4.7k · BSD-2 · live | visual builder | Self-host Vapi-alt w/ drag-drop flow + admin UI (on Pipecat) |
+| exotel/Agent-Stream | 14 · MIT · official | glue | Copy Exotel WebSocket media-stream framing (mulaw, interruption) |
+
+**Avoid:** voxos-ai/bolna (stale 2024 fork — use upstream), vocode (unmaintained),
+plivo/AI-Voice-Agents (no license = reference only), AGPL repos.
+
+**Refined recommendation:** fork **self-hosted bolna-ai/bolna** + **Exotel** (+91 via
+Udyam KYC) + Sarvam + Deepgram + Gemini, and register our Phase-1 tools as its
+function tools. This collapses old Path A/C into one: managed-quality orchestration
+(don't reinvent) + solo-dev-friendly KYC + full BYOK + Sarvam realism. Hosted Bolna
+(below) only if you'd rather not run Docker and have a company's CIN+GST.
+
 ## Two viable paths
 
 ### Path A — Bolna  (best product IF you have a registered company)
