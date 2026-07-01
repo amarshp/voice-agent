@@ -35,17 +35,22 @@ human phone number. Low volume (few calls/day demo). Cheap ideally ~$0, but
 
 ## Two viable paths
 
-### Path A — Bolna  (RECOMMENDED: India-native, sidesteps the compliance trap)
-`Bolna buys +91 DID (Plivo/Vobiz) → Bolna orchestration (BYOK) → Deepgram Nova-3 STT + Gemini 2.5 Flash LLM + Sarvam Bulbul v3 TTS`
+### Path A — Bolna  (best product IF you have a registered company)
+`Bolna +91 DID (Plivo) → Bolna Indian-server routing → Sarvam STT + Azure OpenAI LLM + Sarvam Bulbul v3 TTS`
 
-- India-native platform. **Buys the +91 number for you** ($5/mo via Plivo/Vobiz) and
-  handles the Indian telephony/SIP compliance under the hood → **avoids the Vapi
-  India-SIP-termination block entirely.**
-- **BYOK** (bring your own keys) for STT/LLM/TTS → Sarvam + Deepgram plug in at cost.
-- $0.06/min platform, $5 free credit, no monthly floor. Has function/tool calling + transfer.
-- 10+ Indic languages incl. Hinglish native. Setup: **hours.**
-- **Open item:** exact KYC for the +91 number = "identity documents" (not specified;
-  likely inherits Plivo/Vobiz business reg). Confirm before building. See KYC note below.
+- India-native, handles telephony/SIP compliance. Setup: **hours.**
+- **HARD GATE — number KYC needs CIN + GST (a registered company: Pvt Ltd/LLP).**
+  Udyam sole-prop is NOT accepted by Bolna/Plivo for the number. (Bolna changelog
+  29 Sep 2025: compliance app mandatory before buying dedicated numbers.)
+- **Indian routing forbids BYOK.** Any custom API key → calls route via **US servers**
+  (kills +91 latency/compliance). So you MUST use Bolna's built-in providers:
+  - STT: Sarvam / Deepgram / Azure (built-in) ✅ Sarvam supported
+  - TTS: Sarvam / Cartesia / Azure / ElevenLabs (built-in) ✅ Sarvam Bulbul supported
+  - **LLM: Azure OpenAI ONLY.** No Gemini/Claude on Indian routing.
+- Indian routing also requires **Plivo** specifically (not Vobiz) for the number.
+- Net: realism (Sarvam) survives; you lose Gemini/BYOK; you need a company for the number.
+- **Maybe-dodge:** BYO an Exotel number (Udyam KYC) into Bolna → unclear if it skips
+  Bolna's CIN check. Docs silent → Bolna support ticket to confirm.
 
 ### Path B — Vapi + Exotel  (alternative; compliance NOT proven — do not assume)
 `Exotel +91 DID → SIP → Vapi (BYOK) → same STT/LLM/TTS`
@@ -57,12 +62,15 @@ human phone number. Low volume (few calls/day demo). Cheap ideally ~$0, but
 - Vapi custom TTS = a **webhook returning raw PCM** (not paste-an-API-key); Sarvam
   needs a small custom TTS server. Extra concurrency = $10/line/mo.
 
-### Path C — Self-host LiveKit/Pipecat + Plivo  (cheapest marginal; most effort)
-`Plivo +91 DID → your Mumbai VPS running LiveKit Agents (OSS) → same STT/LLM/TTS`
+### Path C — Exotel + self-host  (RECOMMENDED for a solo dev with no company)
+`Exotel +91 DID (Udyam KYC ✅) → Exotel AgentStream (bidirectional WebSocket) → your Mumbai VPS (LiveKit/Pipecat) → Deepgram/Sarvam STT + Gemini LLM + Sarvam Bulbul v3 TTS`
 
-- You terminate SIP/media on an Indian VPS yourself → Plivo works, near-zero marginal cost.
-- You own turn-taking tuning, deployment, monitoring. Setup: **days.**
-- Only worth it past demo stage / higher volume.
+- **Only path that works on Udyam sole-prop KYC** — Exotel accepts it; no company needed.
+- You terminate audio on a Mumbai VPS → India-compliant, low latency, **full BYOK**
+  (Sarvam + Gemini free tier, your keys, at cost). Realism thesis fully intact.
+- Cost: Exotel prepaid floor (~₹1,700/mo effective) + your API costs. Near-zero marginal.
+- You own turn-taking tuning, deployment, monitoring. Setup: **days, not hours.**
+- This is the honest solo-dev path when forming a company isn't worth it.
 
 ---
 
