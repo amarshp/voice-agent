@@ -9,8 +9,11 @@ import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import ValidationError
+
+load_dotenv()  # read .env (STORE/SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON); no-op if absent
 
 from schemas import BookRequest, ListRequest, TransferRequest
 from store import get_store
