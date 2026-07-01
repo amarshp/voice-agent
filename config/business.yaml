@@ -1,0 +1,33 @@
+# California Burrito — business config the agent reads for FAQs + behavior.
+name: California Burrito
+timezone: Asia/Kolkata
+
+hours:
+  mon-fri: "11:00-23:00"
+  sat-sun: "11:00-23:30"
+
+# Human fallback for escalation / transfer.
+transfer_number: "+91XXXXXXXXXX"
+
+# Booking rules.
+booking:
+  slot_minutes: 90          # length of one reservation slot
+  open_hour: 11             # earliest booking hour (local)
+  close_hour: 22            # latest start hour (local)
+  max_party_size: 12
+  max_days_ahead: 30
+
+menu:
+  - section: Burritos
+    items:
+      - { name: "California Burrito", price: 289 }
+      - { name: "Paneer Tikka Burrito", price: 269 }
+      - { name: "Chicken Chipotle Burrito", price: 299 }
+  - section: Bowls
+    items:
+      - { name: "Burrito Bowl (Veg)", price: 249 }
+      - { name: "Burrito Bowl (Chicken)", price: 279 }
+  - section: Sides
+    items:
+      - { name: "Nachos & Salsa", price: 149 }
+      - { name: "Cinnamon Churros", price: 129 }
