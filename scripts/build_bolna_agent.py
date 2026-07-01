@@ -77,17 +77,24 @@ def _llm_agent() -> dict:
 
 
 def _synthesizer() -> dict:
-    # Sarvam Bulbul — verify voice/model against your Sarvam console + bolna providers.
+    # Sarvam Bulbul. bolna's SarvamSynthesizer uses voice_id/model/language and
+    # resamples to 8kHz for telephony. SarvamConfig requires `voice` too (unused by
+    # the synth) so we set both to the speaker name.
+    #   Warm female receptionist voices:
+    #     bulbul:v3 -> priya, neha, ritu    (v3 = latest/best realism)
+    #     bulbul:v2 -> manisha              (Sarvam labels it "warm & friendly")
+    #   Supported languages: en-IN, hi-IN, and 9 more Indic codes.
+    speaker = os.environ.get("SARVAM_VOICE_ID", os.environ.get("SARVAM_VOICE", "priya"))
     return {
         "provider": "sarvam",
         "stream": True,
         "audio_format": "wav",
         "provider_config": {
-            "voice": os.environ.get("SARVAM_VOICE", "anushka"),
-            "voice_id": os.environ.get("SARVAM_VOICE_ID", "anushka"),
-            "model": os.environ.get("SARVAM_MODEL", "bulbul:v2"),
+            "voice": speaker,
+            "voice_id": speaker,
+            "model": os.environ.get("SARVAM_MODEL", "bulbul:v3"),
             "language": os.environ.get("SARVAM_LANG", "en-IN"),
-            "speed": 1.0,
+            "speed": float(os.environ.get("SARVAM_SPEED", "1.0")),
         },
     }
 

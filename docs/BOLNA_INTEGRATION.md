@@ -36,8 +36,19 @@ WEBHOOK_BASE=https://<your-ngrok>.ngrok.app \
 STT_PROVIDER=deepgram LLM_PROVIDER=gemini TELEPHONY=twilio \
 .venv/Scripts/python scripts/build_bolna_agent.py      # writes bolna_agent.json
 ```
-Set `SARVAM_VOICE/_VOICE_ID/_MODEL` to your real Sarvam Bulbul voice (defaults are
-placeholders — verify in the Sarvam console).
+Defaults to Sarvam **bulbul:v3**, voice **priya**, **en-IN** — real values, verified
+against bolna's SarvamSynthesizer. Override with `SARVAM_MODEL / SARVAM_VOICE_ID /
+SARVAM_LANG / SARVAM_SPEED`.
+
+### Sarvam Bulbul voices (verified 2026)
+| Model | Warm female (receptionist) | Default | Notes |
+|---|---|---|---|
+| **bulbul:v3** (latest) | **priya, neha, ritu** | shubh (M) | 14 F / 23 M voices; best realism |
+| bulbul:v2 | **manisha** ("warm & friendly"), anushka | anushka (F) | v2/v3 voices are NOT interchangeable |
+
+bolna resamples Bulbul (native 22050 Hz) down to **8 kHz** for the phone leg. Languages:
+en-IN, hi-IN + 9 more Indic codes. Test priya vs neha vs manisha on a real 8 kHz call —
+pick by ear, that's the whole "sounds human" bet.
 
 **3. Bring up bolna** (from the cloned repo):
 ```bash
