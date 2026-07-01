@@ -48,8 +48,11 @@ def _tools_params() -> dict:
         fn = t["function"]
         name = fn["name"]
         props = fn["parameters"].get("properties", {})
-        # $var markers: bolna substitutes the LLM's function args by name into the body.
-        param = {k: f"${k}" for k in props}
+        required = fn["parameters"].get("required", list(props))
+        # bolna var-markers are {"$var": "field"} dicts (type-safe JSON substitution).
+        # Only template REQUIRED fields — an optional field the LLM omits would otherwise
+        # be sent as the literal {"$var": ...} marker and fail server-side validation.
+        param = {k: {"$var": k} for k in props if k in required}
         params[name] = {
             "url": f"{WEBHOOK_BASE}/tools/{name}",
             "method": "POST",
@@ -67,12 +70,21 @@ def _transcriber() -> dict:
 
 
 def _llm_agent() -> dict:
-    model = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini",
-             "azure": "azure/gpt-4o-mini"}.get(LLM_PROVIDER, "gemini-2.5-flash")
+    # bolna's native GeminiLLM (provider "google") is buggy in this build (aiohttp attr,
+    # dict.strip). Route Gemini through bolna's OpenAI path instead: provider "openai"
+    # + model "gemini-2.5-flash", with OPENAI_BASE_URL pointed at Gemini's
+    # OpenAI-compatible endpoint (set in bolna's .env). Uses the battle-tested OpenAiLLM.
+    if LLM_PROVIDER == "native_google":
+        provider, model = "google", "gemini-2.5-flash"   # native SDK: strong tool-calling
+    elif LLM_PROVIDER in ("gemini", "google", "openai"):
+        provider, model = "openai", "gemini-2.5-flash"   # OpenAI-compat shim (weak tools)
+    else:
+        provider, model = "azure", "azure/gpt-4o-mini"
     return {
         "agent_type": "simple_llm_agent",
         "agent_flow_type": "streaming",
-        "llm_config": {"provider": LLM_PROVIDER, "model": model, "temperature": 0.3},
+        "llm_config": {"provider": provider, "model": model, "temperature": 0.3,
+                       "max_tokens": 300},
     }
 
 
@@ -85,9 +97,12 @@ def _synthesizer() -> dict:
     #     bulbul:v2 -> manisha              (Sarvam labels it "warm & friendly")
     #   Supported languages: en-IN, hi-IN, and 9 more Indic codes.
     speaker = os.environ.get("SARVAM_VOICE_ID", os.environ.get("SARVAM_VOICE", "priya"))
+    # stream=False -> bolna uses Sarvam's per-request REST TTS, not a persistent
+    # websocket. Avoids the 408 "socket idle too long" crash that ends the call when
+    # the socket sits open with no text (no preloaded greeting) before the caller speaks.
     return {
         "provider": "sarvam",
-        "stream": True,
+        "stream": False,
         "audio_format": "wav",
         "provider_config": {
             "voice": speaker,
@@ -106,9 +121,14 @@ def build_payload() -> dict:
         "agent_config": {
             "agent_name": cfg["name"],
             "agent_type": "other",
+            "agent_welcome_message": f"Thanks for calling {cfg['name']}! How can I help you today?",
             "tasks": [
                 {
                     "task_type": "conversation",
+                    "task_config": {
+                        "hangup_after_silence": 30,   # don't hang up on brief silence mid-tool-call
+                        "check_if_user_online": False,
+                    },
                     "toolchain": {
                         "execution": "parallel",
                         "pipelines": [["transcriber", "llm", "synthesizer"]],

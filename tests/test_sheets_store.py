@@ -32,7 +32,7 @@ class FakeWorksheet:
         assert value_input_option == "RAW"  # phones must not be parsed as formulas
         self.rows.append(row)
 
-    def get_all_records(self):
+    def get_all_records(self, **kwargs):
         header = self.rows[0]
         return [dict(zip(header, r)) for r in self.rows[1:]]
 

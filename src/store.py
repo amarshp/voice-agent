@@ -110,7 +110,9 @@ class SheetsStore(Store):
             self._ws.update([self.COLS], "A1", value_input_option="RAW")
 
     def _rows(self) -> list[dict]:
-        return self._ws.get_all_records()
+        # numericise_ignore=['all']: keep every cell as a string so phone numbers
+        # like "9876543210" aren't auto-parsed to int (which breaks Booking's str field).
+        return self._ws.get_all_records(numericise_ignore=["all"])
 
     def add(self, req: BookRequest, created_at: str) -> tuple[Booking, bool]:
         bid = booking_id(req.phone, req.start_time)
