@@ -94,9 +94,9 @@ class SheetsStore(Store):
         self._lock = threading.Lock()
         gc = gspread.service_account(filename=key)
         self._ws = gc.open_by_key(sheet_id).sheet1
-        # Ensure header row exists.
+        # Ensure header row exists (RAW so nothing is parsed as a formula).
         if self._ws.row_values(1) != self.COLS:
-            self._ws.update([self.COLS], "A1")
+            self._ws.update([self.COLS], "A1", value_input_option="RAW")
 
     def _rows(self) -> list[dict]:
         return self._ws.get_all_records()
@@ -113,7 +113,8 @@ class SheetsStore(Store):
                 notes=req.notes, created_at=created_at,
             )
             d = booking.model_dump()
-            self._ws.append_row([d[c] if d[c] is not None else "" for c in self.COLS])
+            row = [d[c] if d[c] is not None else "" for c in self.COLS]
+            self._ws.append_row(row, value_input_option="RAW")  # keep "+91..." as text
             return booking, True
 
     def list(self, phone: str | None = None, date: str | None = None) -> list[Booking]:
