@@ -16,10 +16,14 @@ run the verify script.
    - **Google Sheets API**
    - **Google Drive API**  (gspread needs it to open by key)
 3. **APIs & Services → Credentials → Create credentials → Service account.**
-   - Name it e.g. `voice-agent`. Skip roles/grants (not needed). Create.
-4. Open the new service account → **Keys → Add key → Create new key → JSON**.
-   A `.json` file downloads. This is your credential — **keep it secret** (it's in
-   `.gitignore`).
+   - Name it e.g. `voice-agent`. Skip roles/grants (not needed). Create → Done.
+4. Get the key file:
+   - Go to https://console.cloud.google.com/iam-admin/serviceaccounts
+     (check the correct project is picked in the top bar).
+   - In the table, **click the service account's email** (the row you just made).
+   - On its page, click the **KEYS** tab → **ADD KEY → Create new key → JSON → Create**.
+   - A `.json` file downloads. This is your credential — **keep it secret** (it's in
+     `.gitignore`).
 
 ## 3. Share the sheet with the service account
 1. Open the JSON key, copy the `client_email`
@@ -39,6 +43,14 @@ $env:GOOGLE_SERVICE_ACCOUNT_JSON="./service-account.json"
 export SHEET_ID=THE_LONG_ID
 export GOOGLE_SERVICE_ACCOUNT_JSON=./service-account.json
 ```
+
+# Windows PowerShell
+$env:SHEET_ID="1haXZsWVquBPCjGAASgh4ZY4TWBGwYVet5ssErMNVPT8"
+$env:GOOGLE_SERVICE_ACCOUNT_JSON="./service-account.json"
+
+# bash
+export SHEET_ID=1haXZsWVquBPCjGAASgh4ZY4TWBGwYVet5ssErMNVPT8
+export GOOGLE_SERVICE_ACCOUNT_JSON=./service-account.json
 
 ## 5. Verify
 ```bash

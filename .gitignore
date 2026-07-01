@@ -7,3 +7,4 @@ service-account.json
 data/bookings.json
 data/demo_bookings.json
 .pytest_cache/
+bolna_agent.json

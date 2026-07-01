@@ -1,0 +1,140 @@
+"""Generate a bolna agent payload from our tool schemas + system prompt.
+
+Emits `bolna_agent.json` — the exact body you POST to bolna's `/agent` endpoint.
+Keeps a single source of truth: tools come from src/schemas.TOOL_SCHEMAS, the prompt
+from src/prompt.build_system_prompt, business data from config/business.yaml.
+
+bolna maps cleanly onto what we already built:
+  - api_tools.tools        == our OpenAI-format TOOL_SCHEMAS (verbatim)
+  - api_tools.tools_params == {tool_name: {url, method, param}}, where `param` uses
+                              bolna's $var markers to inject the LLM's arguments into
+                              the JSON body POSTed to our webhook.
+
+Env (all optional; sane demo defaults):
+  WEBHOOK_BASE   public base URL of our tool service (default a placeholder ngrok URL).
+                 NOTE: bolna's SSRF guard blocks localhost/private IPs — expose the
+                 service via ngrok, or set BOLNA_TOOL_URL_HOST_ALLOWLIST on the bolna side.
+  TELEPHONY      twilio (demo) | plivo | exotel
+  STT_PROVIDER   deepgram (default) | sarvam
+  LLM_PROVIDER   gemini (default) | openai | azure
+  SARVAM_VOICE / SARVAM_VOICE_ID / SARVAM_MODEL / SARVAM_LANG  Sarvam TTS voice knobs.
+
+Run:  python scripts/build_bolna_agent.py
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from prompt import build_system_prompt  # noqa: E402
+from schemas import TOOL_SCHEMAS  # noqa: E402
+from tools import config  # noqa: E402
+
+WEBHOOK_BASE = os.environ.get("WEBHOOK_BASE", "https://YOUR-NGROK-SUBDOMAIN.ngrok.app").rstrip("/")
+TELEPHONY = os.environ.get("TELEPHONY", "twilio")
+STT_PROVIDER = os.environ.get("STT_PROVIDER", "deepgram")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini")
+
+
+def _tools_params() -> dict:
+    """Map each tool -> {url, method, param($var markers)} for bolna."""
+    params: dict[str, dict] = {}
+    for t in TOOL_SCHEMAS:
+        fn = t["function"]
+        name = fn["name"]
+        props = fn["parameters"].get("properties", {})
+        # $var markers: bolna substitutes the LLM's function args by name into the body.
+        param = {k: f"${k}" for k in props}
+        params[name] = {
+            "url": f"{WEBHOOK_BASE}/tools/{name}",
+            "method": "POST",
+            "param": param,
+        }
+    return params
+
+
+def _transcriber() -> dict:
+    if STT_PROVIDER == "sarvam":
+        return {"provider": "sarvam", "model": "saarika:v2.5", "language": "en-IN",
+                "stream": True, "encoding": "linear16"}
+    return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
+            "stream": True, "encoding": "linear16"}
+
+
+def _llm_agent() -> dict:
+    model = {"gemini": "gemini-2.5-flash", "openai": "gpt-4o-mini",
+             "azure": "azure/gpt-4o-mini"}.get(LLM_PROVIDER, "gemini-2.5-flash")
+    return {
+        "agent_type": "simple_llm_agent",
+        "agent_flow_type": "streaming",
+        "llm_config": {"provider": LLM_PROVIDER, "model": model, "temperature": 0.3},
+    }
+
+
+def _synthesizer() -> dict:
+    # Sarvam Bulbul — verify voice/model against your Sarvam console + bolna providers.
+    return {
+        "provider": "sarvam",
+        "stream": True,
+        "audio_format": "wav",
+        "provider_config": {
+            "voice": os.environ.get("SARVAM_VOICE", "anushka"),
+            "voice_id": os.environ.get("SARVAM_VOICE_ID", "anushka"),
+            "model": os.environ.get("SARVAM_MODEL", "bulbul:v2"),
+            "language": os.environ.get("SARVAM_LANG", "en-IN"),
+            "speed": 1.0,
+        },
+    }
+
+
+def build_payload() -> dict:
+    cfg = config()
+    io = {"format": "wav", "provider": TELEPHONY}
+    return {
+        "agent_config": {
+            "agent_name": cfg["name"],
+            "agent_type": "other",
+            "tasks": [
+                {
+                    "task_type": "conversation",
+                    "toolchain": {
+                        "execution": "parallel",
+                        "pipelines": [["transcriber", "llm", "synthesizer"]],
+                    },
+                    "tools_config": {
+                        "input": io,
+                        "output": io,
+                        "transcriber": _transcriber(),
+                        "llm_agent": _llm_agent(),
+                        "synthesizer": _synthesizer(),
+                        "api_tools": {
+                            "tools": TOOL_SCHEMAS,
+                            "tools_params": _tools_params(),
+                        },
+                    },
+                }
+            ],
+        },
+        "agent_prompts": {"task_1": {"system_prompt": build_system_prompt()}},
+    }
+
+
+def main() -> None:
+    payload = build_payload()
+    out = ROOT / "bolna_agent.json"
+    out.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    print(f"Wrote {out}")
+    print(f"  telephony={TELEPHONY}  stt={STT_PROVIDER}  llm={LLM_PROVIDER}  tts=sarvam")
+    print(f"  webhook base={WEBHOOK_BASE}")
+    print(f"  tools: {', '.join(p['function']['name'] for p in TOOL_SCHEMAS)}")
+    if "YOUR-NGROK" in WEBHOOK_BASE:
+        print("  ! set WEBHOOK_BASE to a public URL (ngrok) — bolna blocks localhost.")
+
+
+if __name__ == "__main__":
+    main()
