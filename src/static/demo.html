@@ -5,94 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="theme-color" content="#000000"/>
+<meta name="theme-color" content="#0b1418"/>
 <title>California Burrito</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
   html,body{height:100%}
-  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
-    color:#fff;overflow:hidden;position:relative;
-    background:#0c1418;}
-  /* blurred, layered background like iOS contact-photo blur */
-  .bg{position:fixed;inset:0;z-index:-1;
-    background:
-      radial-gradient(120% 80% at 30% 12%, #3a5a6e 0%, rgba(58,90,110,0) 55%),
-      radial-gradient(120% 90% at 80% 30%, #2b4a3f 0%, rgba(43,74,63,0) 50%),
-      linear-gradient(180deg,#1b2b33 0%,#0e181d 60%,#070d10 100%);
-    filter:saturate(1.05)}
-  .screen{position:relative;height:100dvh;display:flex;flex-direction:column;align-items:center;
-    padding:calc(env(safe-area-inset-top) + 60px) 0 calc(env(safe-area-inset-bottom) + 40px)}
-  /* caller identity */
-  .caller{display:flex;flex-direction:column;align-items:center;text-align:center}
-  .name{font-size:32px;font-weight:500;letter-spacing:.2px}
-  .sub{margin-top:8px;font-size:19px;font-weight:400;color:rgba(235,235,245,.62);
-    font-variant-numeric:tabular-nums}
-  /* controls block anchored to bottom */
-  .pad{margin-top:auto;width:100%;max-width:330px;padding:0 26px;display:flex;flex-direction:column;align-items:center}
-  .grid{width:100%;display:grid;grid-template-columns:repeat(3,1fr);row-gap:26px;justify-items:center;margin-bottom:36px}
-  .cell{display:flex;flex-direction:column;align-items:center;gap:9px;width:78px}
-  .key{width:74px;height:74px;border-radius:50%;border:0;cursor:pointer;
-    background:rgba(255,255,255,.16);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-    display:flex;align-items:center;justify-content:center;transition:transform .08s,background .15s}
-  .key:active{transform:scale(.9)}
-  .key svg{width:32px;height:32px;fill:#fff}
-  .key.active{background:#fff}.key.active svg{fill:#0e181d}
-  .lbl{font-size:13px;font-weight:400;color:rgba(255,255,255,.92)}
-  /* big action button (call / end) */
-  .action{width:74px;height:74px;border-radius:50%;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
-    box-shadow:0 8px 26px rgba(0,0,0,.4);transition:transform .08s}
-  .action:active{transform:scale(.9)}
-  .action svg{width:34px;height:34px;fill:#fff}
-  .end{background:#ff3b30}.end svg{transform:rotate(134deg)}
-  .call{background:#34c759}
-  .hint{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 150px);text-align:center;
-    font-size:13px;color:rgba(235,235,245,.5);padding:0 30px}
-  .dim{opacity:.45;pointer-events:none}
-  .hidden{display:none!important}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#fff;overflow:hidden;
+    background:radial-gradient(130% 80% at 50% 0%,#2f4d5c 0%,#16252c 48%,#0a1216 100%)}
+  .screen{height:100dvh;display:flex;flex-direction:column;align-items:center;
+    padding:calc(env(safe-area-inset-top) + 68px) 24px calc(env(safe-area-inset-bottom) + 46px)}
+  .avatar{width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;
+    background:rgba(255,255,255,.13);backdrop-filter:blur(10px);box-shadow:0 10px 34px rgba(0,0,0,.35);margin-bottom:20px}
+  .name{font-size:32px;font-weight:500;letter-spacing:.2px;text-align:center}
+  .sub{margin-top:9px;font-size:18px;color:rgba(235,235,245,.6);font-variant-numeric:tabular-nums;min-height:22px}
+  .spacer{flex:1}
+  .row{display:flex;gap:56px;justify-content:center;align-items:flex-end;margin-bottom:34px;min-height:92px}
+  .ctl{display:flex;flex-direction:column;align-items:center;gap:9px;opacity:0;transform:translateY(6px);
+    transition:opacity .25s,transform .25s;pointer-events:none}
+  .ctl.show{opacity:1;transform:none;pointer-events:auto}
+  .mini{width:70px;height:70px;border-radius:50%;border:0;cursor:pointer;background:rgba(255,255,255,.16);
+    backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:center;transition:transform .08s,background .15s}
+  .mini:active{transform:scale(.9)} .mini svg{width:30px;height:30px;fill:#fff}
+  .mini.active{background:#fff} .mini.active svg{fill:#12222a}
+  .lbl{font-size:13px;color:rgba(255,255,255,.9)}
+  .big{width:78px;height:78px;border-radius:50%;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);transition:transform .08s,background .2s}
+  .big:active{transform:scale(.9)} .big svg{width:36px;height:36px;fill:#fff}
+  .call{background:#34c759} .end{background:#ff3b30} .end svg{transform:rotate(134deg)}
+  .hint{font-size:13px;color:rgba(235,235,245,.5);margin-top:22px;text-align:center;transition:opacity .3s}
 </style>
 </head>
 <body>
-<div class="bg"></div>
 <div class="screen">
-  <div class="caller">
-    <div class="name">California Burrito</div>
-    <div class="sub" id="sub">tap the green button to call</div>
+  <div class="avatar">🌯</div>
+  <div class="name">California Burrito</div>
+  <div class="sub" id="sub">AI Receptionist</div>
+
+  <div class="spacer"></div>
+
+  <div class="row">
+    <div class="ctl" id="muteWrap"><button class="mini" id="mute" aria-label="mute">
+      <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm6-3a6 6 0 0 1-5 5.91V21h-2v-3.09A6 6 0 0 1 6 12h2a4 4 0 0 0 8 0h2z"/></svg>
+    </button><div class="lbl" id="muteLbl">mute</div></div>
+
+    <div class="ctl" id="spkWrap"><button class="mini active" id="spk" aria-label="speaker">
+      <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 5V4L8 9H4zm12 3a4 4 0 0 0-2.5-3.7v7.4A4 4 0 0 0 16 12zm-2.5-8v2.1A6 6 0 0 1 13.5 20v2A8 8 0 0 0 13.5 4z"/></svg>
+    </button><div class="lbl">speaker</div></div>
   </div>
 
+  <button class="big call" id="action" aria-label="call">
+    <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg>
+  </button>
   <div class="hint" id="hint">🎧 Best with headphones</div>
-
-  <div class="pad">
-    <!-- classic iOS 6-button in-call grid (decorative except Mute) -->
-    <div class="grid dim" id="grid">
-      <div class="cell"><button class="key" id="mute" aria-label="mute">
-        <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm6-3a6 6 0 0 1-5 5.91V21h-2v-3.09A6 6 0 0 1 6 12h2a4 4 0 0 0 8 0h2z"/></svg>
-      </button><div class="lbl">mute</div></div>
-
-      <div class="cell"><button class="key" aria-label="keypad">
-        <svg viewBox="0 0 24 24"><g><circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/><circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/></g></svg>
-      </button><div class="lbl">keypad</div></div>
-
-      <div class="cell"><button class="key" id="spk" aria-label="speaker">
-        <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 5V4L8 9H4zm12 3a4 4 0 0 0-2.5-3.7v7.4A4 4 0 0 0 16 12zm-2.5-8v2.06A6 6 0 0 1 13.5 20v2.06A8 8 0 0 0 13.5 4z"/></svg>
-      </button><div class="lbl">speaker</div></div>
-
-      <div class="cell"><button class="key" aria-label="add call">
-        <svg viewBox="0 0 24 24"><path d="M13 8h3V5h2v3h3v2h-3v3h-2v-3h-3V8zM6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg>
-      </button><div class="lbl">add call</div></div>
-
-      <div class="cell"><button class="key" aria-label="facetime">
-        <svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2.5l4 3.5V6l-4 3.5V8a2 2 0 0 0-2-2H4z"/></svg>
-      </button><div class="lbl">FaceTime</div></div>
-
-      <div class="cell"><button class="key" aria-label="contacts">
-        <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>
-      </button><div class="lbl">contacts</div></div>
-    </div>
-
-    <button class="action call" id="action" aria-label="call">
-      <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg>
-    </button>
-  </div>
 </div>
 
 <script>
@@ -100,17 +64,18 @@ const WS_BASE="ws://localhost:5001", AGENT="AGENT_ID_PLACEHOLDER";
 function linToMu(s){const B=0x84,C=32635;let sign=(s>>8)&0x80;if(sign)s=-s;if(s>C)s=C;s+=B;let e=7;for(let m=0x4000;(s&m)===0&&e>0;e--,m>>=1){}let man=(s>>(e+3))&0x0f;return(~(sign|(e<<4)|man))&0xff;}
 function muToLin(u){u=~u&0xff;let sign=u&0x80,e=(u>>4)&7,man=u&0x0f;let s=((man<<3)+0x84)<<e;s-=0x84;return sign?-s:s;}
 const $=id=>document.getElementById(id);
-let ws,ac,micNode,micStream,playTime=0,connected=false,inCall=false,muted=false,secs=0,timer=null,ts=0,buf=[];
+let ws,ac,gain,micNode,micStream,playTime=0,connected=false,inCall=false,muted=false,spk=true,secs=0,timer=null,ts=0,buf=[];
 const sub=t=>$('sub').textContent=t;
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 
 async function call(){
   inCall=true;
   $('action').classList.replace('call','end');
-  $('grid').classList.remove('dim');
-  $('hint').classList.add('hidden');
+  $('muteWrap').classList.add('show'); $('spkWrap').classList.add('show');
+  $('hint').style.opacity=0;
   sub('calling…');
   try{ ac=new AudioContext({sampleRate:8000});
+    gain=ac.createGain(); gain.gain.value=1; gain.connect(ac.destination);
     micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1,sampleRate:8000}});
   }catch(e){ sub('microphone blocked'); reset(); return; }
   ws=new WebSocket(WS_BASE+'/chat/v1/'+AGENT);
@@ -125,30 +90,31 @@ async function call(){
   ws.onclose=()=>{ if(inCall){sub('call ended');reset();} };
   ws.onerror=()=>sub('connection error');
 }
-function startTimer(){ secs=0;sub('0:00'); timer=setInterval(()=>{ if(!muted)secs++; sub((muted?'muted · ':'')+fmt(secs)); },1000); }
+function startTimer(){ secs=0;sub('0:00'); timer=setInterval(()=>{ secs++; sub((muted?'muted · ':'')+fmt(secs)); },1000); }
 function startMic(){
   const src=ac.createMediaStreamSource(micStream);
   micNode=ac.createScriptProcessor(1024,1,1); src.connect(micNode);
-  const sink=ac.createGain(); sink.gain.value=0; micNode.connect(sink); sink.connect(ac.destination);
+  const s=ac.createGain(); s.gain.value=0; micNode.connect(s); s.connect(ac.destination);
   micNode.onaudioprocess=e=>{ if(!connected||muted)return;
     const f=e.inputBuffer.getChannelData(0);
-    for(let i=0;i<f.length;i++){let s=Math.max(-1,Math.min(1,f[i]))*32767;buf.push(linToMu(s));}
+    for(let i=0;i<f.length;i++){let v=Math.max(-1,Math.min(1,f[i]))*32767;buf.push(linToMu(v));}
     while(buf.length>=160){const fr=buf.splice(0,160);let b='';for(let i=0;i<160;i++)b+=String.fromCharCode(fr[i]);
       ws.send(JSON.stringify({event:'media',streamSid:'WEB',media:{track:'inbound',chunk:String(ts/20),timestamp:String(ts),payload:btoa(b)}}));ts+=20;} };
 }
 function playChunk(b64){const bin=atob(b64),pcm=new Float32Array(bin.length);
   for(let i=0;i<bin.length;i++)pcm[i]=muToLin(bin.charCodeAt(i))/32768;
   const ab=ac.createBuffer(1,pcm.length,8000);ab.getChannelData(0).set(pcm);
-  const n=ac.createBufferSource();n.buffer=ab;n.connect(ac.destination);
+  const n=ac.createBufferSource();n.buffer=ab;n.connect(gain);
   const now=ac.currentTime;if(playTime<now)playTime=now+0.02;n.start(playTime);playTime+=ab.duration;}
 function reset(){ inCall=false;connected=false;clearInterval(timer);
   try{micNode&&micNode.disconnect();}catch{} try{micStream&&micStream.getTracks().forEach(t=>t.stop());}catch{} try{ac&&ac.close();}catch{}
-  $('action').classList.replace('end','call'); $('grid').classList.add('dim');
-  $('mute').classList.remove('active'); muted=false;
-  setTimeout(()=>{ if(!inCall){sub('tap the green button to call');$('hint').classList.remove('hidden');} },1400); }
+  $('action').classList.replace('end','call'); $('muteWrap').classList.remove('show'); $('spkWrap').classList.remove('show');
+  $('mute').classList.remove('active'); $('muteLbl').textContent='mute'; muted=false;
+  setTimeout(()=>{ if(!inCall){sub('AI Receptionist');$('hint').style.opacity=1;} },1300); }
 function hang(){ try{ws&&ws.close();}catch{} sub('call ended'); reset(); }
 $('action').onclick=()=>inCall?hang():call();
-$('mute').onclick=()=>{ if(!inCall)return; muted=!muted; $('mute').classList.toggle('active',muted); };
+$('mute').onclick=()=>{ if(!inCall)return; muted=!muted; $('mute').classList.toggle('active',muted); $('muteLbl').textContent=muted?'unmute':'mute'; };
+$('spk').onclick=()=>{ if(!inCall||!gain)return; spk=!spk; gain.gain.value=spk?1:0.35; $('spk').classList.toggle('active',spk); };
 </script>
 </body>
 </html>
