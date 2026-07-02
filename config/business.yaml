@@ -17,31 +17,78 @@ booking:
   max_party_size: 12
   max_days_ahead: 30
 
-# Make-it-yourself, Chipotle-style: pick a base (burrito / bowl / tacos), then a protein.
-# Signature best-sellers below. Prices approximate (₹). `desc` = ingredients for the bot.
+# Real store menu (California Burrito, Kondapur board). Build-your-own, Chipotle-style:
+#   1) pick a BASE — Burrito, Rice Bowl, Salad, Tacos, or Nachos
+#   2) pick a MAIN (protein) — the price is that main's Mini/Regular
+#   3) add free toppings (below); extras cost more.
+# Fixed-price items (quesadillas, snacks, drinks, desserts, specials) listed too. Taxes extra.
 menu:
-  - section: Burritos
+  - section: Mains (choose one for your burrito / bowl / salad / tacos / nachos — price is Mini/Regular)
     items:
-      - { name: "California Burrito", price: 299, desc: "signature — grilled chicken or paneer, cilantro-lime rice, black beans, cheese, salsa, guacamole and chipotle, wrapped in a flour tortilla" }
-      - { name: "BBQ Chicken Burrito", price: 309, desc: "smoky BBQ chicken, rice, black beans, cheese, salsa, sour cream" }
-      - { name: "BBQ Paneer Burrito", price: 289, desc: "BBQ paneer, rice, beans, cheese, salsa, sour cream (veg)" }
-      - { name: "Chipotle Chicken Burrito", price: 309, desc: "chicken in homemade chipotle-in-adobo, rice, beans, cheese" }
-      - { name: "Crispy Mushroom Burrito", price: 279, desc: "crispy mushroom, rice, beans, Ooty lettuce, salsa (veg)" }
-  - section: Bowls
+      - { name: "Crispy Peri Peri Chicken", price: "219/279", desc: "non-veg" }
+      - { name: "BBQ Chicken", price: "219/279", desc: "non-veg, smoky barbecue" }
+      - { name: "Chipotle Chicken", price: "219/279", desc: "non-veg, homemade chipotle-in-adobo" }
+      - { name: "BBQ Paneer", price: "219/279", desc: "veg, smoky barbecue paneer" }
+      - { name: "Mexican Paneer", price: "219/279", desc: "veg" }
+      - { name: "Crispy Mushroom", price: "209/279", desc: "veg" }
+      - { name: "Peri Peri Potato", price: "179/235", desc: "veg" }
+      - { name: "Fajita Veggies", price: "179/235", desc: "veg" }
+  - section: Cheesy Quesadillas
     items:
-      - { name: "BBQ Chicken Bowl", price: 299, desc: "no tortilla — cilantro-lime rice, black beans, BBQ chicken, salsa, cheese, guacamole" }
-      - { name: "BBQ Paneer Bowl", price: 279, desc: "rice, beans, BBQ paneer, salsa, cheese, guacamole (veg)" }
-      - { name: "Salad Bowl", price: 269, desc: "Ooty lettuce base, beans, choice of protein, salsa, dressing" }
-  - section: Tacos & Quesadillas
+      - { name: "Cheesy Chicken Dominator", price: 225 }
+      - { name: "BBQ Chicken Quesadilla", price: 225 }
+      - { name: "Crispy Peri Peri Chicken Quesadilla", price: 225 }
+      - { name: "Chili Chipotle Chicken Quesadilla", price: 225 }
+      - { name: "Mexican Corn Fiesta", price: 199, desc: "veg" }
+      - { name: "Southwest Mushroom", price: 185, desc: "veg" }
+      - { name: "Kids Quesadilla", price: 155 }
+  - section: Tacos (Over Crowded Taco Squad)
     items:
-      - { name: "Chicken Tacos", price: 249, desc: "two soft tacos, grilled chicken, salsa, cheese, lettuce" }
-      - { name: "Chicken Quesadilla", price: 279, desc: "grilled tortilla, chicken, melted cheese, salsa" }
-      - { name: "Paneer Quesadilla", price: 259, desc: "grilled tortilla, paneer, melted cheese, salsa (veg)" }
-  - section: Nachos & Sides
+      - { name: "7 Layer Chicken Taco", price: 89 }
+      - { name: "7 Layer Veg Taco", price: 69, desc: "veg" }
+      - { name: "Chipotle Chicken Taco", price: 89 }
+      - { name: "Chipotle Potato Taco", price: 69, desc: "veg" }
+  - section: Hangout Snacks
     items:
-      - { name: "Loaded Nachos", price: 229, desc: "corn nacho chips, queso liquid cheese, black beans, salsa, jalapenos" }
-      - { name: "Chips & Guacamole", price: 159, desc: "corn chips with fresh Coorg-avocado guacamole" }
-      - { name: "Chips & Queso", price: 149, desc: "corn chips with warm queso dip" }
-  - section: Dessert
+      - { name: "Avocado Tostada", price: 99, desc: "veg, guacamole on a crisp tostada" }
+      - { name: "Cheesy Veg Tostada", price: 89, desc: "veg" }
+      - { name: "Cheese Meltdown Taco", price: "99 veg / 129 non-veg" }
+      - { name: "Plain Nachos", price: 79, desc: "veg" }
+      - { name: "Topped Nachos", price: "89 veg / 109 non-veg" }
+      - { name: "Popcorn Potato", price: 59, desc: "veg" }
+      - { name: "Popcorn Mushroom", price: 130, desc: "veg" }
+      - { name: "Popcorn Chicken", price: 140 }
+  - section: Specials
     items:
-      - { name: "Churros", price: 139, desc: "cinnamon-sugar churros with chocolate dip" }
+      - { name: "Hot Habanero Burrito", price: 139, desc: "very spicy; paneer or chicken" }
+      - { name: "Pro Bowl / Pro Salad", price: 269, desc: "Eat Like a Pro — protein-rich, high-fibre" }
+  - section: Drinks (unlimited refills Rs 79 on classic drinks)
+    items:
+      - { name: "Mexican Sunrise", price: 60 }
+      - { name: "Pink Lemonade", price: 60 }
+      - { name: "Peach Iced Tea", price: 60 }
+  - section: Desserts
+    items:
+      - { name: "Chocodilla", price: 99, desc: "chocolate dessert quesadilla" }
+      - { name: "Churros", price: 99, desc: "3 pcs with chocolate dip" }
+      - { name: "Double Choco Brownie", price: 99, desc: "1 pc" }
+  - section: Extras (add-ons)
+    items:
+      - { name: "Chicken", price: 85 }
+      - { name: "Paneer", price: 85 }
+      - { name: "Guacamole", price: 70 }
+      - { name: "Mushroom", price: 70 }
+      - { name: "Cheesy Queso", price: 45 }
+      - { name: "Cheese", price: 35 }
+      - { name: "Potato", price: 35 }
+      - { name: "Chipotle Mayo", price: 30 }
+  - section: Free toppings
+    items:
+      - { name: "Cilantro Lime Rice" }
+      - { name: "Chili Lime or Tomato Garlic Beans" }
+      - { name: "Pico de Gallo" }
+      - { name: "Roasted / Red Chili Tomatillo Salsa" }
+      - { name: "Corn Salsa" }
+      - { name: "Sour Cream" }
+      - { name: "Fajita Vegetables" }
+      - { name: "Lettuce, Cheese and Jalapeños (regular size only)" }

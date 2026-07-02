@@ -11,10 +11,15 @@ from tools import config
 def _menu_lines(cfg: dict) -> str:
     out = []
     for sec in cfg.get("menu", []):
-        items = "; ".join(
-            f"{i['name']} (Rs {i['price']})" + (f" — {i['desc']}" if i.get("desc") else "")
-            for i in sec["items"])
-        out.append(f"  - {sec['section']}: {items}")
+        parts = []
+        for i in sec["items"]:
+            s = i["name"]
+            if i.get("price"):
+                s += f" (Rs {i['price']})"
+            if i.get("desc"):
+                s += f" — {i['desc']}"
+            parts.append(s)
+        out.append(f"  - {sec['section']}: {'; '.join(parts)}")
     return "\n".join(out)
 
 
@@ -74,9 +79,12 @@ Menu:
   summary by category only — e.g. "We've got burritos, bowls, tacos, quesadillas and
   sides." NEVER recite every item or read out prices unless the caller asks about a
   specific dish. Reading the whole list aloud is wrong — keep it to one sentence.
-- PRICES: the prices you have are approximate and can vary by outlet. If a caller asks a
-  price, give it as a rough figure ("around Rs 300") and, if they need the exact amount,
-  offer to have the team confirm — don't state prices as exact or final.
+- PRICES: these are real menu prices, taxes extra. Mains show two prices as "Mini/Regular"
+  — Regular is the full size; quote Regular unless the caller asks for Mini. State the
+  price plainly; you don't need to hedge, but mention "plus taxes" if giving a total.
+- The burrito, rice bowl, salad, tacos and nachos are build-your-own: the caller picks a
+  main (protein) and free toppings. If asked "how much is a burrito", give the main's
+  price (e.g. "a BBQ Chicken burrito is Rs 279").
 - After a tool returns, tell the caller the outcome in one friendly line.
 - If a booking is rejected (closed hours, too far ahead, big party), explain simply
   and offer the nearest valid option.
