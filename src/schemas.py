@@ -96,8 +96,9 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "list_bookings",
-            "description": "Look up existing reservations, optionally filtered by the "
-                           "caller's phone or a date (YYYY-MM-DD).",
+            "description": "Look up a caller's existing reservations. Call this as soon as "
+                           "you have EITHER a phone number OR a date — both parameters are "
+                           "optional; do NOT ask for a date if you already have the phone.",
             "parameters": {
                 "type": "object",
                 "properties": {
