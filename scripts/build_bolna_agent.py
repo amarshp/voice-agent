@@ -96,7 +96,9 @@ def _llm_agent() -> dict:
     elif LLM_PROVIDER == "gemini":
         provider, model = "openai", "gemini-2.5-flash"   # if OPENAI_BASE_URL points at Gemini
     else:                                                # default: Groq via OpenAI-compat
-        provider, model = "openai", os.environ.get("LLM_MODEL", "llama-3.3-70b-versatile")
+        # gpt-oss-120b (OpenAI open model on Groq): 5/5 reliable structured tool-calls +
+        # fast. llama-3.3-70b flaked live (emitted <function=...> text -> spoke code).
+        provider, model = "openai", os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
     return {
         "agent_type": "simple_llm_agent",
         "agent_flow_type": "streaming",
@@ -146,6 +148,9 @@ def build_payload() -> dict:
                     "task_config": {
                         "hangup_after_silence": 30,   # don't hang up on brief silence mid-tool-call
                         "check_if_user_online": False,
+                        # require 3 words before treating it as a real interruption (default 1
+                        # made the bot cut itself off on echo/one stray word)
+                        "number_of_words_for_interruption": 3,
                     },
                     "toolchain": {
                         "execution": "parallel",
