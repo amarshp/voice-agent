@@ -168,7 +168,11 @@ class OpenAiLLM(OpenAICompatibleLLM):
 
         self.model_args.update({max_tokens_key: self.max_tokens, "temperature": self.temperature, "model": self.model})
 
-        self.model_args["service_tier"] = kwargs.get("service_tier", "default")
+        # Only send service_tier when explicitly provided. Groq rejects "default"
+        # (allows only auto/on_demand/flex/performance/null); omitting is safe for all.
+        _svc_tier = kwargs.get("service_tier")
+        if _svc_tier and _svc_tier != "default":
+            self.model_args["service_tier"] = _svc_tier
 
         # http2=False: cancelled h2 requests leak streams until the connection pins at 100 (barge-in)
         http_client = get_shared_http_client(base_url=kwargs.get("base_url"), http2=False)
@@ -232,6 +236,27 @@ class OpenAiLLM(OpenAICompatibleLLM):
     ):
         if not messages or len(messages) == 0:
             raise Exception("No messages provided")
+
+        # Groq strictly validates message schema and rejects bolna's extra fields
+        # (response_uid, turn_id, ...). Keep only standard OpenAI keys. Also normalize
+        # tool_calls (drop index=None which Groq rejects on the assistant echo).
+        _allowed = {"role", "content", "name", "tool_calls", "tool_call_id"}
+
+        def _clean_msg(m):
+            if not isinstance(m, dict):
+                return m
+            out = {k: v for k, v in m.items() if k in _allowed}
+            tcs = out.get("tool_calls")
+            if isinstance(tcs, list):
+                out["tool_calls"] = [
+                    {k: v for k, v in tc.items() if k != "index"} if isinstance(tc, dict) else tc
+                    for tc in tcs
+                ]
+            if out.get("content") is None and "tool_calls" not in out:
+                out["content"] = ""
+            return out
+
+        messages = [_clean_msg(m) for m in messages]
 
         response_format = self.get_response_format(request_json)
         model_args = {

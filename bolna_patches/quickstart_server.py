@@ -169,6 +169,32 @@ async def get_all_agents():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+def _presynth_welcome(agent_config):
+    """Pre-synthesize the greeting via Sarvam REST -> base64 PCM 8k so bolna plays it
+    immediately on answer (the open-source quickstart otherwise skips the welcome)."""
+    import os, io, wave, base64, requests
+    try:
+        text = agent_config.get("agent_welcome_message")
+        if not text:
+            return None
+        sc = agent_config["tasks"][0]["tools_config"]["synthesizer"]["provider_config"]
+        r = requests.post(
+            "https://api.sarvam.ai/text-to-speech",
+            headers={"api-subscription-key": os.environ["SARVAM_API_KEY"],
+                     "Content-Type": "application/json"},
+            json={"inputs": [text], "target_language_code": sc.get("language", "en-IN"),
+                  "speaker": sc.get("voice_id", "anushka"), "model": sc.get("model", "bulbul:v2"),
+                  "speech_sample_rate": 8000}, timeout=15)
+        if r.status_code != 200:
+            logger.error(f"welcome presynth failed: {r.status_code} {r.text[:120]}")
+            return None
+        wav = wave.open(io.BytesIO(base64.b64decode(r.json()["audios"][0])))
+        return base64.b64encode(wav.readframes(wav.getnframes())).decode()
+    except Exception as e:
+        logger.error(f"welcome presynth error: {e}")
+        return None
+
+
 #############################################################################################
 # Websocket
 #############################################################################################
@@ -186,7 +212,10 @@ async def websocket_endpoint(agent_id: str, websocket: WebSocket, user_agent: st
         traceback.print_exc()
         raise HTTPException(status_code=404, detail="Agent not found")
 
-    assistant_manager = AssistantManager(agent_config, websocket, agent_id)
+    assistant_manager = AssistantManager(
+        agent_config, websocket, agent_id,
+        welcome_message_audio=_presynth_welcome(agent_config),
+    )
 
     try:
         async for index, task_output in assistant_manager.run(local=True):

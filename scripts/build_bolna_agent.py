@@ -38,7 +38,19 @@ from tools import config  # noqa: E402
 WEBHOOK_BASE = os.environ.get("WEBHOOK_BASE", "https://YOUR-NGROK-SUBDOMAIN.ngrok.app").rstrip("/")
 TELEPHONY = os.environ.get("TELEPHONY", "twilio")
 STT_PROVIDER = os.environ.get("STT_PROVIDER", "deepgram")
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "groq")  # Groq = fast; OPENAI_BASE_URL in .env
+
+
+def _strict_tools() -> list:
+    """Set strict:false on each tool. Groq's strict mode demands every property be in
+    `required` + additionalProperties:false everywhere; we have optional fields (notes),
+    so disable strict (bolna defaults it to True)."""
+    out = []
+    for t in TOOL_SCHEMAS:
+        t = json.loads(json.dumps(t))  # deep copy
+        t["function"]["strict"] = False
+        out.append(t)
+    return out
 
 
 def _tools_params() -> dict:
@@ -74,12 +86,14 @@ def _llm_agent() -> dict:
     # dict.strip). Route Gemini through bolna's OpenAI path instead: provider "openai"
     # + model "gemini-2.5-flash", with OPENAI_BASE_URL pointed at Gemini's
     # OpenAI-compatible endpoint (set in bolna's .env). Uses the battle-tested OpenAiLLM.
+    # provider "openai" == the OpenAiLLM path (accumulator/tools proven). OPENAI_BASE_URL in
+    # bolna's .env decides the actual backend (Groq for low latency). model is a Groq model.
     if LLM_PROVIDER == "native_google":
-        provider, model = "google", "gemini-2.5-flash"   # native SDK: strong tool-calling
-    elif LLM_PROVIDER in ("gemini", "google", "openai"):
-        provider, model = "openai", "gemini-2.5-flash"   # OpenAI-compat shim (weak tools)
-    else:
-        provider, model = "azure", "azure/gpt-4o-mini"
+        provider, model = "google", "gemini-2.5-flash"
+    elif LLM_PROVIDER == "gemini":
+        provider, model = "openai", "gemini-2.5-flash"   # if OPENAI_BASE_URL points at Gemini
+    else:                                                # default: Groq via OpenAI-compat
+        provider, model = "openai", os.environ.get("LLM_MODEL", "llama-3.3-70b-versatile")
     return {
         "agent_type": "simple_llm_agent",
         "agent_flow_type": "streaming",
@@ -102,7 +116,7 @@ def _synthesizer() -> dict:
     # the socket sits open with no text (no preloaded greeting) before the caller speaks.
     return {
         "provider": "sarvam",
-        "stream": False,
+        "stream": os.environ.get("SARVAM_STREAM", "true").lower() == "true",  # streaming = lower latency
         "audio_format": "wav",
         "provider_config": {
             "voice": speaker,
@@ -121,7 +135,8 @@ def build_payload() -> dict:
         "agent_config": {
             "agent_name": cfg["name"],
             "agent_type": "other",
-            "agent_welcome_message": f"Thanks for calling {cfg['name']}! How can I help you today?",
+            "agent_welcome_message": os.environ.get(
+                "WELCOME_MSG", f"Hello! Welcome to {cfg['name']}. How can I help you today?"),
             "tasks": [
                 {
                     "task_type": "conversation",
@@ -140,7 +155,7 @@ def build_payload() -> dict:
                         "llm_agent": _llm_agent(),
                         "synthesizer": _synthesizer(),
                         "api_tools": {
-                            "tools": TOOL_SCHEMAS,
+                            "tools": _strict_tools(),
                             "tools_params": _tools_params(),
                         },
                     },
