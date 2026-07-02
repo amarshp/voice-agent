@@ -81,7 +81,7 @@ def _transcriber() -> dict:
     # (but too low cuts callers off mid-sentence, e.g. spelling a phone number).
     return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
             "stream": True, "encoding": "linear16",
-            "endpointing": int(os.environ.get("ENDPOINTING", "300"))}
+            "endpointing": int(os.environ.get("ENDPOINTING", "600"))}
 
 
 def _llm_agent() -> dict:

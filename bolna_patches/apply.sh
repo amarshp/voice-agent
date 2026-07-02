@@ -17,6 +17,7 @@ docker cp "$D/sarvam_synthesizer.py"    $C:/usr/local/lib/python3.10/site-packag
 docker cp "$D/task_manager.py"          $C:/usr/local/lib/python3.10/site-packages/bolna/agent_manager/task_manager.py
 docker cp "$D/tool_call_accumulator.py" $C:/usr/local/lib/python3.10/site-packages/bolna/llms/tool_call_accumulator.py
 docker cp "$D/openai_llm.py"            $C:/usr/local/lib/python3.10/site-packages/bolna/llms/openai_llm.py
+docker cp "$D/constants.py"           $C:/usr/local/lib/python3.10/site-packages/bolna/constants.py
 echo "patches applied; restarting bolna-app..."
 (cd "$D/../bolna/local_setup" && docker compose restart bolna-app)
 echo "done."
