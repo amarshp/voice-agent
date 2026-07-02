@@ -77,9 +77,9 @@ def _menu_keywords() -> str:
     """Menu vocabulary -> Deepgram keyterm boosting (nova-3), so it stops mishearing
     dish names ('nachos' -> 'nudges'). Derived from business.yaml (single source)."""
     cfg = config()
-    words: list[str] = [cfg["name"]]
+    # dish names + base words only (section titles are verbose prose -> bad keyterms)
+    words: list[str] = [cfg["name"], "Burrito", "Bowl", "Tacos", "Nachos", "Quesadilla", "Salad"]
     for sec in cfg.get("menu", []):
-        words.append(sec["section"])
         words += [i["name"] for i in sec["items"]]
     return ",".join(dict.fromkeys(w for w in words if w))
 
