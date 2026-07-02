@@ -25,6 +25,9 @@ booking:
   max_party_size: 12
   max_days_ahead: 30
 
+# Customer-facing one-line menu overview (what the bot says for "what's on the menu").
+menu_overview: "burritos, bowls, tacos, quesadillas, nachos, hangout snacks, drinks and desserts"
+
 # Real store menu (California Burrito, Kondapur board). Build-your-own, Chipotle-style:
 #   1) pick a BASE — Burrito, Rice Bowl, Salad, Tacos, or Nachos
 #   2) pick a MAIN (protein) — the price is that main's Mini/Regular

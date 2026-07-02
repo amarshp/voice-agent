@@ -22,6 +22,11 @@ def menu_categories() -> list[str]:
     return [s["section"].split(" (")[0].strip() for s in config().get("menu", [])]
 
 
+def menu_overview() -> str:
+    """Customer-facing one-line menu summary (falls back to raw category names)."""
+    return config().get("menu_overview") or ", ".join(menu_categories())
+
+
 def menu_lookup(query: str) -> list[dict]:
     """Return menu items matching a dish name / category / keyword. Small slice so the
     tool result stays cheap in the LLM context (menu-as-tool to keep the prompt tiny)."""

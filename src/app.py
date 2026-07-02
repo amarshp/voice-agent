@@ -19,7 +19,7 @@ load_dotenv()  # read .env (STORE/SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON); no-op i
 
 from schemas import BookRequest, ListRequest, MenuRequest, TransferRequest
 from store import get_store
-from tools import BookingError, config, menu_categories, menu_lookup, validate_booking
+from tools import BookingError, config, menu_categories, menu_lookup, menu_overview, validate_booking
 
 app = FastAPI(title="California Burrito Voice Agent — Tools")
 store = get_store()
@@ -71,7 +71,7 @@ def book_appointment(req: BookRequest) -> dict:
 def get_menu(req: MenuRequest) -> dict:
     q = (req.query or "").strip()
     if not q or q.lower() in ("overview", "all", "menu", "everything", "full menu"):
-        return envelope(True, "Menu categories", {"categories": menu_categories()})
+        return envelope(True, "Menu overview", {"overview": menu_overview()})
     hits = menu_lookup(q)
     if not hits:
         return envelope(True, f"Nothing matches '{q}'. Here are the categories.",

@@ -5,7 +5,7 @@ Run `python src/prompt.py` to print it.
 """
 from __future__ import annotations
 
-from tools import config, menu_categories
+from tools import config, menu_overview
 
 
 def _hours_lines(cfg: dict) -> str:
@@ -50,7 +50,7 @@ Hours:
 Offers:
 {_offers_lines(cfg)}
 
-Menu: we serve {", ".join(menu_categories())}. You do NOT have the menu memorized —
+Menu: we serve {menu_overview()}. You do NOT have the menu memorized —
 for ANY dish, price, ingredient, category or veg question, CALL get_menu(query) first and
 answer briefly from its result. Never invent items or prices.
 
