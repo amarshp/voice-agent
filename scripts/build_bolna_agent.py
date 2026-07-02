@@ -77,8 +77,11 @@ def _transcriber() -> dict:
     if STT_PROVIDER == "sarvam":
         return {"provider": "sarvam", "model": "saarika:v2.5", "language": "en-IN",
                 "stream": True, "encoding": "linear16"}
+    # endpointing = ms of silence before Deepgram finalizes -> lower = snappier replies
+    # (but too low cuts callers off mid-sentence, e.g. spelling a phone number).
     return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
-            "stream": True, "encoding": "linear16"}
+            "stream": True, "encoding": "linear16",
+            "endpointing": int(os.environ.get("ENDPOINTING", "300"))}
 
 
 def _llm_agent() -> dict:
