@@ -15,6 +15,9 @@ SCOPE="${SCOPE:-amarshs-projects}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 D="$(mktemp -d)"
+# link to the EXISTING california-burrito-demo project (else a new random project is made)
+mkdir -p "$D/.vercel"
+echo '{"projectId":"prj_QJIefhKs5Nx4qLuZLUL0AWT4BpiG","orgId":"team_SXKbWahty3c4YYBDGSMmshu5","projectName":"california-burrito-demo"}' > "$D/.vercel/project.json"
 sed -e "s|AGENT_ID_PLACEHOLDER|$AID|" \
     -e "s|ws://localhost:5001|$WSS|" \
     "$ROOT/src/static/demo.html" > "$D/index.html"
