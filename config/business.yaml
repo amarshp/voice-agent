@@ -12,7 +12,7 @@ offers:
   - { name: "Unlimited Refills", detail: "Rs 79 for unlimited refills on classic drinks", store_only: true }
 
 # Outlet location — answer directly when a caller asks "where are you / your address".
-location: "Kondapur, Hyderabad"   # TODO: set your outlet's exact street address
+location: "Survey No. 13, SMR Vinay Technopolis, Madhapur Road, Kondapur, Hyderabad, Telangana 500084"
 
 # Human fallback for escalation / transfer.
 transfer_number: "+91XXXXXXXXXX"
