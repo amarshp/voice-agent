@@ -79,9 +79,14 @@ def _transcriber() -> dict:
                 "stream": True, "encoding": "linear16"}
     # endpointing = ms of silence before Deepgram finalizes -> lower = snappier replies
     # (but too low cuts callers off mid-sentence, e.g. spelling a phone number).
+    # endpointing = ms of silence before finalizing. Too low -> chops mid-sentence when the
+    # caller pauses (drops words, splits "my name is X and my number is Y" into fragments);
+    # too high -> slow to reply. interim_timeout raises the force-finalize fallback so a
+    # natural pause mid-utterance doesn't split. Groq's fast LLM absorbs the extra wait.
     return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
             "stream": True, "encoding": "linear16",
-            "endpointing": int(os.environ.get("ENDPOINTING", "600"))}
+            "endpointing": int(os.environ.get("ENDPOINTING", "700")),
+            "interim_timeout": float(os.environ.get("INTERIM_TIMEOUT", "2.5"))}
 
 
 def _llm_agent() -> dict:
