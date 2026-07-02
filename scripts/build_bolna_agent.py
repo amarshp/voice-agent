@@ -115,11 +115,10 @@ def _llm_agent() -> dict:
         provider, model = "google", "gemini-2.5-flash"
     elif LLM_PROVIDER == "gemini":
         provider, model = "openai", "gemini-2.5-flash"   # if OPENAI_BASE_URL points at Gemini
-    else:                                                # default: Groq via OpenAI-compat (OPENAI_BASE_URL)
-        # gpt-oss-120b (Groq): proven in-pipeline (32/32 scenarios + clean demo bookings),
-        # ~0.5-0.9s first-token, free. Beat gpt-4.1-nano (flaked once e2e) and gpt-5-nano
-        # (2.2s @ low / skips tools @ minimal). Free-tier cap 200k tokens/DAY -> upgrade for scale.
-        provider, model = "openai", os.environ.get("LLM_MODEL", "openai/gpt-oss-120b")
+    else:                                                # default: OpenAI (OPENAI_BASE_URL in .env)
+        # gpt-4o: reliable tool-calls, ~30k tokens/MIN (no per-minute cliff), ~2-3c/call with
+        # the slim menu-as-tool prompt. Groq free 8k/min caused 4x 429 (dead air) in one call.
+        provider, model = "openai", os.environ.get("LLM_MODEL", "gpt-4o")
     return {
         "agent_type": "simple_llm_agent",
         "agent_flow_type": "streaming",
