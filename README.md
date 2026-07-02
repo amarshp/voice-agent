@@ -16,6 +16,8 @@ your browser (use headphones). No phone needed.
 </p>
 <p align="center"><sub>Real in-browser call screen: tap to call (left) → live timer, mute / speaker, and end-call (right).</sub></p>
 
+<p align="center"><b>🎥 <a href="docs/media/demo-call.mp4">Watch a real call — with sound</a></b> — a full table booking, start to finish (~30s).</p>
+
 <sub>*The demo streams to a self-hosted backend; if the demo is temporarily offline the backend isn't running.*</sub>
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-tool%20service-009688) ![Tests](https://img.shields.io/badge/tests-33%20scenarios%20%2B%2012%20unit-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
