@@ -66,11 +66,17 @@ function linToMu(s){const B=0x84,C=32635;let sign=(s>>8)&0x80;if(sign)s=-s;if(s>
 function muToLin(u){u=~u&0xff;let sign=u&0x80,e=(u>>4)&7,man=u&0x0f;let s=((man<<3)+0x84)<<e;s-=0x84;return sign?-s:s;}
 const $=id=>document.getElementById(id);
 let ws,ac,gain,micNode,micStream,playTime=0,connected=false,inCall=false,muted=false,spk=true,secs=0,timer=null,ts=0,buf=[];
+let wakeLock=null,userEnded=false,reconnectTries=0;
 const sub=t=>$('sub').textContent=t;
 const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
 
+// keep the phone awake so the tab isn't suspended mid-call (the #1 cause of ws drops)
+async function lockScreen(){ try{ if('wakeLock' in navigator && !wakeLock){ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{wakeLock=null;}); } }catch(e){} }
+function unlockScreen(){ try{ wakeLock&&wakeLock.release(); }catch(e){} wakeLock=null; }
+document.addEventListener('visibilitychange',()=>{ if(inCall&&document.visibilityState==='visible'){ lockScreen(); try{ac&&ac.resume();}catch(e){} } });
+
 async function call(){
-  inCall=true;
+  inCall=true; userEnded=false; reconnectTries=0;
   $('action').classList.replace('call','end');
   $('muteWrap').classList.add('show'); $('spkWrap').classList.add('show');
   $('hint').style.opacity=0;
@@ -79,17 +85,26 @@ async function call(){
     gain=ac.createGain(); gain.gain.value=1; gain.connect(ac.destination);
     micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1,sampleRate:8000}});
   }catch(e){ sub('microphone blocked'); reset(); return; }
+  await lockScreen();
+  startMic();
+  openWs(false);
+}
+function openWs(isReconnect){
   ws=new WebSocket(WS_BASE+'/chat/v1/'+AGENT);
-  ws.onopen=()=>{ connected=true; startTimer();
+  ws.onopen=()=>{ connected=true; reconnectTries=0;
     ws.send(JSON.stringify({event:'connected',protocol:'Call',version:'1.0.0'}));
     ws.send(JSON.stringify({event:'start',streamSid:'WEB',start:{streamSid:'WEB',callSid:'WEBCALL',tracks:['inbound'],mediaFormat:{encoding:'audio/x-mulaw',sampleRate:8000,channels:1}}}));
-    startMic(); };
+    if(!isReconnect) startTimer(); };
   ws.onmessage=ev=>{ let d;try{d=JSON.parse(ev.data);}catch{return;}
     if(d.event==='media')playChunk(d.media.payload);
     else if(d.event==='mark')ws.send(JSON.stringify({event:'mark',streamSid:'WEB',mark:{name:d.mark.name}}));
     else if(d.event==='clear')playTime=ac.currentTime; };
-  ws.onclose=()=>{ if(inCall){sub('call ended');reset();} };
-  ws.onerror=()=>sub('connection error');
+  ws.onclose=()=>{ connected=false;
+    if(userEnded||!inCall){ sub('call ended'); reset(); return; }
+    if(reconnectTries<5){ reconnectTries++; sub('reconnecting…');
+      setTimeout(()=>{ if(inCall&&!userEnded){ try{ac&&ac.resume();}catch(e){} openWs(true);} }, 500*reconnectTries); }
+    else { sub('call dropped — tap to call again'); reset(); } };
+  ws.onerror=()=>{};
 }
 function startTimer(){ secs=0;sub('0:00'); timer=setInterval(()=>{ secs++; sub((muted?'muted · ':'')+fmt(secs)); },1000); }
 function startMic(){
@@ -107,12 +122,12 @@ function playChunk(b64){const bin=atob(b64),pcm=new Float32Array(bin.length);
   const ab=ac.createBuffer(1,pcm.length,8000);ab.getChannelData(0).set(pcm);
   const n=ac.createBufferSource();n.buffer=ab;n.connect(gain);
   const now=ac.currentTime;if(playTime<now)playTime=now+0.02;n.start(playTime);playTime+=ab.duration;}
-function reset(){ inCall=false;connected=false;clearInterval(timer);
+function reset(){ inCall=false;connected=false;clearInterval(timer); unlockScreen();
   try{micNode&&micNode.disconnect();}catch{} try{micStream&&micStream.getTracks().forEach(t=>t.stop());}catch{} try{ac&&ac.close();}catch{}
   $('action').classList.replace('end','call'); $('muteWrap').classList.remove('show'); $('spkWrap').classList.remove('show');
   $('mute').classList.remove('active'); $('muteLbl').textContent='mute'; muted=false;
   setTimeout(()=>{ if(!inCall){sub('AI Receptionist');$('hint').style.opacity=1;} },1300); }
-function hang(){ try{ws&&ws.close();}catch{} sub('call ended'); reset(); }
+function hang(){ userEnded=true; try{ws&&ws.close();}catch{} sub('call ended'); reset(); }
 $('action').onclick=()=>inCall?hang():call();
 $('mute').onclick=()=>{ if(!inCall)return; muted=!muted; $('mute').classList.toggle('active',muted); $('muteLbl').textContent=muted?'unmute':'mute'; };
 $('spk').onclick=()=>{ if(!inCall||!gain)return; spk=!spk; gain.gain.value=spk?1:0.35; $('spk').classList.toggle('active',spk); };
