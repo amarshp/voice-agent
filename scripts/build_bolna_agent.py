@@ -73,6 +73,17 @@ def _tools_params() -> dict:
     return params
 
 
+def _menu_keywords() -> str:
+    """Menu vocabulary -> Deepgram keyterm boosting (nova-3), so it stops mishearing
+    dish names ('nachos' -> 'nudges'). Derived from business.yaml (single source)."""
+    cfg = config()
+    words: list[str] = [cfg["name"]]
+    for sec in cfg.get("menu", []):
+        words.append(sec["section"])
+        words += [i["name"] for i in sec["items"]]
+    return ",".join(dict.fromkeys(w for w in words if w))
+
+
 def _transcriber() -> dict:
     if STT_PROVIDER == "sarvam":
         return {"provider": "sarvam", "model": "saarika:v2.5", "language": "en-IN",
@@ -85,8 +96,9 @@ def _transcriber() -> dict:
     # natural pause mid-utterance doesn't split. Groq's fast LLM absorbs the extra wait.
     return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
             "stream": True, "encoding": "linear16",
-            "endpointing": int(os.environ.get("ENDPOINTING", "700")),
-            "interim_timeout": float(os.environ.get("INTERIM_TIMEOUT", "2.5"))}
+            "keywords": _menu_keywords(),           # keyterm boost for dish names
+            "endpointing": int(os.environ.get("ENDPOINTING", "500")),
+            "interim_timeout": float(os.environ.get("INTERIM_TIMEOUT", "2.0"))}
 
 
 def _llm_agent() -> dict:
