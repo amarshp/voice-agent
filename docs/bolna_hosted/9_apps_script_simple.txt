@@ -33,6 +33,30 @@ function doPost(e) {
     return json({ ok: false, message: "Sorry, couldn't save that: " + err });
   }
 }
+// LOOK UP existing bookings by phone and/or date (GET). Bolna's list_bookings hits this.
+function doGet(e) {
+  try {
+    var p = (e && e.parameter) || {};
+    var phone = (p.phone || "").toString().replace(/\D/g, "");   // digits only
+    var date  = (p.date  || "").toString().trim();               // YYYY-MM-DD
+    var rows  = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].getDataRange().getValues();
+    var out = [];
+    for (var i = 1; i < rows.length; i++) {                       // skip header row
+      var r = rows[i];
+      var rphone = (r[2] || "").toString().replace(/\D/g, "");
+      var rtime  = (r[4] || "").toString();
+      var okPhone = !phone || rphone.indexOf(phone) !== -1;
+      var okDate  = !date  || rtime.indexOf(date)  !== -1;
+      if (okPhone && okDate)
+        out.push({ id: r[0], name: r[1], phone: r[2], party_size: r[3], start_time: r[4] });
+    }
+    return json({ ok: true,
+      message: out.length ? ("Found " + out.length + " reservation(s).") : "No reservations found.",
+      data: out });
+  } catch (err) {
+    return json({ ok: false, message: "Lookup failed: " + err });
+  }
+}
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
@@ -83,10 +107,46 @@ In Bolna → Add custom function → paste this (replace the url with YOUR /exec
 }
 
 ------------------------------------------------------------------------
-TEST (paste in a terminal, replace the URL):
+STEP 4 — add the LOOKUP function in Bolna (list_bookings, uses GET)
+------------------------------------------------------------------------
+Same /exec URL, but method GET. In Bolna → Add custom function:
+
+{
+  "name": "list_bookings",
+  "description": "Look up a caller's existing reservations. Call as soon as you have EITHER a phone number OR a date; do not ask for a date if you already have the phone.",
+  "pre_call_message": "One moment while I check that.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "phone": { "type": "string", "description": "Caller's phone number" },
+      "date":  { "type": "string", "description": "Reservation date YYYY-MM-DD (optional)" }
+    }
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "GET",
+    "url": "PASTE_YOUR_APPS_SCRIPT_/exec_URL_HERE",
+    "param": { "phone": "%(phone)s", "date": "%(date)s" },
+    "api_token": null,
+    "headers": {},
+    "pre_call_webhook_url": null, "pre_call_webhook_param": null
+  }
+}
+
+========================================================================
+IMPORTANT — whenever you EDIT the script, push a NEW VERSION:
+  Deploy → Manage deployments → (pencil) Edit → Version = "New version" → Deploy
+The /exec URL stays the SAME; your changes only go live after this step.
+========================================================================
+
+------------------------------------------------------------------------
+TEST both (paste in a terminal, replace the URL):
+  # book (POST):
   curl -L -X POST "PASTE_/exec_URL" -H "Content-Type: application/json" \
     -d '{"name":"Test","phone":"9000000000","party_size":2,"start_time":"2026-07-05T19:00:00"}'
-A new row should appear in your Sheet, and you get {"ok":true,...} back.
+  # look up (GET):
+  curl -L "PASTE_/exec_URL?phone=9000000000"
+A new row should appear in your Sheet; the lookup returns {"ok":true,"data":[...]}.
 ------------------------------------------------------------------------
 
 Notes:
