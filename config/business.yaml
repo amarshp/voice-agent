@@ -6,6 +6,11 @@ hours:
   mon-fri: "11:00-23:00"
   sat-sun: "11:00-23:30"
 
+# Current promotions. `store_only` = dine-in/takeaway at the outlet, NOT on Swiggy/Zomato.
+offers:
+  - { name: "Taco Tuesday", detail: "Buy 1 Get 1 Free on tacos, every Tuesday", store_only: true }
+  - { name: "Unlimited Refills", detail: "Rs 79 for unlimited refills on classic drinks", store_only: true }
+
 # Human fallback for escalation / transfer.
 transfer_number: "+91XXXXXXXXXX"
 

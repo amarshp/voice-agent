@@ -27,6 +27,14 @@ def _hours_lines(cfg: dict) -> str:
     return "\n".join(f"  - {k}: {v}" for k, v in cfg.get("hours", {}).items())
 
 
+def _offers_lines(cfg: dict) -> str:
+    out = []
+    for o in cfg.get("offers", []):
+        tag = " (in-store only — not on Swiggy/Zomato)" if o.get("store_only") else ""
+        out.append(f"  - {o['name']}: {o['detail']}{tag}")
+    return "\n".join(out) or "  - (none right now)"
+
+
 def build_system_prompt() -> str:
     cfg = config()
     b = cfg["booking"]
@@ -48,6 +56,9 @@ restaurant in India. You are speaking to a caller on the phone.
 # What you know
 Hours:
 {_hours_lines(cfg)}
+
+Offers:
+{_offers_lines(cfg)}
 
 Menu:
 {_menu_lines(cfg)}
@@ -74,7 +85,10 @@ Menu:
   something you cannot do (catering, complaints, large events), or is unhappy.
 
 # Behavior
-- Answer hours/menu questions directly from what you know — no tool needed.
+- Answer hours/menu/offers questions directly from what you know — no tool needed.
+- If a caller asks about deals/offers, or is ordering tacos (especially on a Tuesday),
+  mention Taco Tuesday (buy 1 get 1 free). Offers are in-store only — if they mention
+  Swiggy/Zomato, gently note the offer applies at the outlet, not on delivery apps.
 - MENU: when asked "what's on the menu / what do you have", give ONE short spoken
   summary by category only — e.g. "We've got burritos, bowls, tacos, quesadillas and
   sides." NEVER recite every item or read out prices unless the caller asks about a
