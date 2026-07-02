@@ -1,0 +1,97 @@
+========================================================================
+SIMPLEST Google Sheets → Bolna  (no server, no Render, no service account)
+========================================================================
+A Google Apps Script Web App that lives inside your Sheet. It runs AS YOU,
+so nothing to share and no keys. Bolna's custom function just POSTs to its URL.
+
+------------------------------------------------------------------------
+STEP 1 — Add the script to your Sheet
+------------------------------------------------------------------------
+1. Open your Google Sheet.
+2. Extensions → Apps Script.
+3. Delete whatever's there, paste ALL of the code below, and Save (disk icon).
+
+--------------------------- CODE (paste this) --------------------------
+function doPost(e) {
+  try {
+    var data = JSON.parse((e && e.postData && e.postData.contents) || "{}");
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0]; // first tab
+    var id = "bk_" + Utilities.getUuid().replace(/-/g, "").slice(0, 12);
+    sheet.appendRow([
+      id,
+      data.name || "",
+      data.phone || "",
+      data.party_size || "",
+      data.start_time || "",
+      new Date()
+    ]);
+    return json({ ok: true,
+      message: "Booked for " + data.name + ", party of " + data.party_size +
+               ", at " + data.start_time + ". Reference " + id + ".",
+      id: id });
+  } catch (err) {
+    return json({ ok: false, message: "Sorry, couldn't save that: " + err });
+  }
+}
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+STEP 2 — Publish it as a Web App
+------------------------------------------------------------------------
+1. Click  Deploy → New deployment.
+2. Gear icon → Type = "Web app".
+3. Execute as:      Me
+   Who has access:  Anyone
+4. Deploy → Authorize access → pick your Google account → Allow.
+5. Copy the "Web app URL" (ends in /exec). THAT is your endpoint.
+
+------------------------------------------------------------------------
+STEP 3 — Point Bolna's custom function at that URL
+------------------------------------------------------------------------
+In Bolna → Add custom function → paste this (replace the url with YOUR /exec URL):
+
+{
+  "name": "book_appointment",
+  "description": "Reserve a table at California Burrito. Call after you have the caller's name, phone, party size and a specific future date & time, and after reading them back and getting a yes.",
+  "pre_call_message": "Sure - one moment while I book that for you.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "name":       { "type": "string",  "description": "Caller's name" },
+      "phone":      { "type": "string",  "description": "Caller's phone number" },
+      "party_size": { "type": "integer", "description": "Number of guests" },
+      "start_time": { "type": "string",  "description": "ISO 8601 local, e.g. 2026-07-03T20:00:00" }
+    },
+    "required": ["name", "phone", "party_size", "start_time"]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "PASTE_YOUR_APPS_SCRIPT_/exec_URL_HERE",
+    "param": {
+      "name": "%(name)s", "phone": "%(phone)s",
+      "party_size": "%(party_size)s", "start_time": "%(start_time)s"
+    },
+    "api_token": null,
+    "headers": { "Content-Type": "application/json" },
+    "pre_call_webhook_url": null, "pre_call_webhook_param": null
+  }
+}
+
+------------------------------------------------------------------------
+TEST (paste in a terminal, replace the URL):
+  curl -L -X POST "PASTE_/exec_URL" -H "Content-Type: application/json" \
+    -d '{"name":"Test","phone":"9000000000","party_size":2,"start_time":"2026-07-05T19:00:00"}'
+A new row should appear in your Sheet, and you get {"ok":true,...} back.
+------------------------------------------------------------------------
+
+Notes:
+- Runs as YOU → no service account, no sharing, no keys, no cold-start. Free & always on.
+- If Bolna doesn't follow the redirect Apps Script returns, the ROW still gets written
+  (the response text is just for the spoken confirmation).
+- To also read/look-up bookings, add a matching doGet(e); optional — booking write is the
+  main need. Keep the Render endpoint if you want the richer read/menu/transfer APIs.
