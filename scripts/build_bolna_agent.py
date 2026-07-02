@@ -97,8 +97,11 @@ def _transcriber() -> dict:
     return {"provider": "deepgram", "model": "nova-3", "language": "en-IN",
             "stream": True, "encoding": "linear16",
             "keywords": _menu_keywords(),           # keyterm boost for dish names
-            "endpointing": int(os.environ.get("ENDPOINTING", "500")),
-            "interim_timeout": float(os.environ.get("INTERIM_TIMEOUT", "2.0"))}
+            # 800ms: callers pause between digit groups when spelling a phone number; 500 was
+            # finalizing on those pauses and the bot cut in mid-number. Groq's fast LLM keeps
+            # total response snappy even with the longer wait.
+            "endpointing": int(os.environ.get("ENDPOINTING", "800")),
+            "interim_timeout": float(os.environ.get("INTERIM_TIMEOUT", "3.0"))}
 
 
 def _llm_agent() -> dict:
