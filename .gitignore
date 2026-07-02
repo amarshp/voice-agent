@@ -12,3 +12,4 @@ data/demo_bookings.json
 bolna_agent.json
 demos_*.wav
 .current_agent
+.playwright-mcp/

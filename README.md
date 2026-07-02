@@ -9,6 +9,13 @@
 Opens an **iPhone-style call screen** — tap the green button and talk to the agent right in
 your browser (use headphones). No phone needed.
 
+<p align="center">
+  <img src="docs/images/demo-idle.png" alt="Call screen — idle" width="270"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/images/demo-incall.png" alt="Call screen — in call" width="270"/>
+</p>
+<p align="center"><sub>Real in-browser call screen: tap to call (left) → live timer, mute / speaker, and end-call (right).</sub></p>
+
 <sub>*The demo streams to a self-hosted backend; if the demo is temporarily offline the backend isn't running.*</sub>
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue) ![FastAPI](https://img.shields.io/badge/FastAPI-tool%20service-009688) ![Tests](https://img.shields.io/badge/tests-33%20scenarios%20%2B%2012%20unit-brightgreen) ![License](https://img.shields.io/badge/license-MIT-lightgrey)
