@@ -1,0 +1,30 @@
+=== "Generate function from cURL" — paste these into Bolna ===
+
+Bolna will parse the request and generate the custom function. After it parses, mark the
+body fields (name, phone, party_size, start_time) as VARIABLES (LLM-filled), not constants.
+
+── book_appointment (writes to Google Sheets) ──
+curl --location 'https://cali-burrito-tools.onrender.com/tools/book_appointment' \
+--header 'Content-Type: application/json' \
+--data '{
+  "name": "Arjun",
+  "phone": "9900112233",
+  "party_size": 4,
+  "start_time": "2026-07-03T20:00:00"
+}'
+
+── list_bookings (reads from Google Sheets) ──
+curl --location 'https://cali-burrito-tools.onrender.com/tools/list_bookings' \
+--header 'Content-Type: application/json' \
+--data '{
+  "phone": "9900112233"
+}'
+
+
+=== Quick manual test (run in a terminal to confirm the endpoint works) ===
+# Health:
+curl https://cali-burrito-tools.onrender.com/health
+# A real booking (should return {"ok":true,"message":"Booked for ..."} and add a Sheet row):
+curl -X POST https://cali-burrito-tools.onrender.com/tools/book_appointment \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test","phone":"9000000000","party_size":2,"start_time":"2026-07-05T19:00:00"}'

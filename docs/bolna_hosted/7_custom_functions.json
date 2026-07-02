@@ -1,0 +1,68 @@
+// ── Bolna custom function: book_appointment (writes the reservation to Google Sheets) ──
+// Paste into Bolna → Add custom function → Edit packet details.
+// Points at the deployed tool service, which appends the row to your Google Sheet.
+{
+  "name": "book_appointment",
+  "description": "Reserve a table at California Burrito. Call ONLY after you have the caller's name, phone number, party size and a specific FUTURE date & time, AND after reading the details back and getting a 'yes'.",
+  "pre_call_message": "Sure — one moment while I book that for you.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "name":       { "type": "string",  "description": "Caller's name for the reservation" },
+      "phone":      { "type": "string",  "description": "Caller's phone number, digits only" },
+      "party_size": { "type": "integer", "description": "Number of guests (do not add the caller)" },
+      "start_time": { "type": "string",  "description": "Reservation date & time, ISO 8601 local, e.g. 2026-07-03T20:00:00" }
+    },
+    "required": ["name", "phone", "party_size", "start_time"]
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://cali-burrito-tools.onrender.com/tools/book_appointment",
+    "param": {
+      "name":       "%(name)s",
+      "phone":      "%(phone)s",
+      "party_size": "%(party_size)s",
+      "start_time": "%(start_time)s"
+    },
+    "api_token": null,
+    "headers": { "Content-Type": "application/json" },
+    "pre_call_webhook_url": null,
+    "pre_call_webhook_param": null
+  }
+}
+
+// ── Bolna custom function: list_bookings (looks up existing reservations) ──
+{
+  "name": "list_bookings",
+  "description": "Look up a caller's existing reservations. Call as soon as you have EITHER a phone number OR a date — both optional; do not ask for a date if you already have the phone.",
+  "pre_call_message": "One moment while I check that.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "phone": { "type": "string", "description": "Caller's phone number" },
+      "date":  { "type": "string", "description": "Reservation date, YYYY-MM-DD (optional)" }
+    }
+  },
+  "key": "custom_task",
+  "value": {
+    "method": "POST",
+    "url": "https://cali-burrito-tools.onrender.com/tools/list_bookings",
+    "param": {
+      "phone": "%(phone)s",
+      "date":  "%(date)s"
+    },
+    "api_token": null,
+    "headers": { "Content-Type": "application/json" },
+    "pre_call_webhook_url": null,
+    "pre_call_webhook_param": null
+  }
+}
+
+/*
+NOTE on the "param" variable syntax:
+Bolna substitutes the LLM's arguments into the request body. The exact placeholder syntax
+can differ by Bolna version — you may see %(name)s, {name}, or {{name}}. If bookings don't
+come through, use the "Generate function from cURL" flow instead (see 8_curl_commands.txt) —
+it auto-detects the fields, then you mark name/phone/party_size/start_time as variables.
+*/
