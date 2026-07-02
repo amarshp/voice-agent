@@ -7,10 +7,12 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import ValidationError
 
 load_dotenv()  # read .env (STORE/SHEET_ID/GOOGLE_SERVICE_ACCOUNT_JSON); no-op if absent
@@ -35,6 +37,14 @@ def envelope(ok: bool, message: str, data=None) -> dict:
 @app.get("/health")
 def health() -> dict:
     return envelope(True, "up", {"store": type(store).__name__})
+
+
+@app.get("/demo", response_class=HTMLResponse)
+def demo(agent_id: str = "") -> HTMLResponse:
+    """Free in-browser voice demo. Open /demo?agent_id=<id> in a browser."""
+    html = (Path(__file__).parent / "static" / "demo.html").read_text(encoding="utf-8")
+    aid = agent_id or os.environ.get("DEMO_AGENT_ID", "")
+    return HTMLResponse(html.replace("AGENT_ID_PLACEHOLDER", aid))
 
 
 @app.post("/tools/book_appointment")

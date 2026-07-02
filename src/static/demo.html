@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>California Burrito — Voice Demo</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:560px;margin:32px auto;padding:0 16px;color:#222}
+  h1{font-size:20px} .row{margin:10px 0}
+  input{width:100%;padding:8px;font-size:13px;box-sizing:border-box}
+  button{font-size:17px;padding:14px 22px;border:0;border-radius:10px;cursor:pointer}
+  #call{background:#16a34a;color:#fff} #hang{background:#dc2626;color:#fff}
+  button:disabled{opacity:.5;cursor:default}
+  #status{margin-top:14px;font-weight:600} #log{margin-top:10px;font-size:12px;color:#666;white-space:pre-wrap;max-height:200px;overflow:auto}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#bbb;margin-right:6px}
+  .on{background:#16a34a} .warn{color:#b45309}
+</style>
+</head>
+<body>
+<h1>🌯 California Burrito — Voice Demo</h1>
+<p style="font-size:13px;color:#555">Free, in-browser call to the AI receptionist. Use <b>headphones</b> (stops the bot hearing itself). Allow mic access when asked.</p>
+<div class="row"><label style="font-size:12px">bolna WebSocket base (leave default on the laptop):</label>
+  <input id="wsbase" value="ws://localhost:5001"/></div>
+<div class="row"><label style="font-size:12px">Agent ID:</label>
+  <input id="agent" value="AGENT_ID_PLACEHOLDER"/></div>
+<div class="row">
+  <button id="call">📞 Call</button>
+  <button id="hang" disabled>■ Hang up</button>
+</div>
+<div id="status"><span class="dot"></span>idle</div>
+<div id="log"></div>
+
+<script>
+// ---- G.711 mu-law ----
+function linToMu(s){ const B=0x84,C=32635; let sign=(s>>8)&0x80; if(sign) s=-s; if(s>C)s=C; s+=B;
+  let e=7; for(let m=0x4000; (s&m)===0 && e>0; e--, m>>=1){} let man=(s>>(e+3))&0x0f;
+  return (~(sign|(e<<4)|man))&0xff; }
+function muToLin(u){ u=~u&0xff; let sign=u&0x80, e=(u>>4)&7, man=u&0x0f;
+  let s=((man<<3)+0x84)<<e; s-=0x84; return sign? -s : s; }
+
+const $=id=>document.getElementById(id);
+const log=m=>{ $('log').textContent=(new Date().toLocaleTimeString()+'  '+m+'\n'+$('log').textContent).slice(0,4000); };
+function setStatus(t,on){ $('status').innerHTML='<span class="dot '+(on?'on':'')+'"></span>'+t; }
+
+let ws, ac, micNode, micStream, playTime=0, playing=false, connected=false;
+
+async function call(){
+  $('call').disabled=true;
+  const base=$('wsbase').value.replace(/\/$/,''), agent=$('agent').value.trim();
+  try{
+    ac = new AudioContext({sampleRate:8000});
+    if(ac.sampleRate!==8000) log('note: browser gave '+ac.sampleRate+'Hz (resampling handled by context)');
+    micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1,sampleRate:8000}});
+  }catch(e){ log('mic/audio error: '+e); setStatus('mic blocked',false); $('call').disabled=false; return; }
+
+  ws = new WebSocket(base+'/chat/v1/'+agent);
+  ws.binaryType='arraybuffer';
+  ws.onopen=()=>{ connected=true; $('hang').disabled=false; setStatus('connected — say hello',true); log('ws open');
+    ws.send(JSON.stringify({event:'connected',protocol:'Call',version:'1.0.0'}));
+    ws.send(JSON.stringify({event:'start',streamSid:'WEB',start:{streamSid:'WEB',callSid:'WEBCALL',tracks:['inbound'],mediaFormat:{encoding:'audio/x-mulaw',sampleRate:8000,channels:1}}}));
+    startMic();
+  };
+  ws.onmessage=ev=>{ let d; try{ d=JSON.parse(ev.data);}catch{ return;}
+    if(d.event==='media'){ playChunk(d.media.payload); }
+    else if(d.event==='mark'){ ws.send(JSON.stringify({event:'mark',streamSid:'WEB',mark:{name:d.mark.name}})); }
+    else if(d.event==='clear'){ playTime=ac.currentTime; log('(interrupted)'); }
+  };
+  ws.onclose=()=>{ setStatus('call ended',false); log('ws closed'); cleanup(); };
+  ws.onerror=e=>{ log('ws error'); };
+}
+
+let ts=0, buf=[];
+function startMic(){
+  const src=ac.createMediaStreamSource(micStream);
+  micNode=ac.createScriptProcessor(1024,1,1);
+  src.connect(micNode);
+  // keep the processor running WITHOUT routing mic to speakers (gain 0 = no feedback)
+  const sink=ac.createGain(); sink.gain.value=0; micNode.connect(sink); sink.connect(ac.destination);
+  micNode.onaudioprocess=e=>{
+    if(!connected) return;
+    const f=e.inputBuffer.getChannelData(0);
+    for(let i=0;i<f.length;i++){ let s=Math.max(-1,Math.min(1,f[i]))*32767; buf.push(linToMu(s)); }
+    while(buf.length>=160){
+      const frame=buf.splice(0,160); let bin='';
+      for(let i=0;i<160;i++) bin+=String.fromCharCode(frame[i]);
+      ws.send(JSON.stringify({event:'media',streamSid:'WEB',media:{track:'inbound',chunk:String(ts/20),timestamp:String(ts),payload:btoa(bin)}}));
+      ts+=20;
+    }
+  };
+}
+
+function playChunk(b64){
+  const bin=atob(b64); const pcm=new Float32Array(bin.length);
+  for(let i=0;i<bin.length;i++) pcm[i]=muToLin(bin.charCodeAt(i))/32768;
+  const ab=ac.createBuffer(1,pcm.length,8000); ab.getChannelData(0).set(pcm);
+  const node=ac.createBufferSource(); node.buffer=ab; node.connect(ac.destination);
+  const now=ac.currentTime; if(playTime<now) playTime=now+0.02;
+  node.start(playTime); playTime+=ab.duration;
+}
+
+function cleanup(){ try{micNode&&micNode.disconnect();}catch{} try{micStream&&micStream.getTracks().forEach(t=>t.stop());}catch{} try{ac&&ac.close();}catch{}
+  connected=false; $('call').disabled=false; $('hang').disabled=true; }
+function hang(){ try{ws&&ws.close();}catch{} cleanup(); }
+
+$('call').onclick=call; $('hang').onclick=hang;
+</script>
+</body>
+</html>
