@@ -45,11 +45,10 @@ SYSTEM = build_system_prompt() + DATE_LINE
 TOOLS = [{**t, "function": {**t["function"], "strict": False}} for t in TOOL_SCHEMAS]
 
 
-def ask(turns: list[tuple[str, str]]) -> dict:
-    """turns = [(role, content), ...] -> assistant message {content, tool_calls}."""
-    messages = [{"role": "system", "content": SYSTEM}]
-    for role, content in turns:
-        messages.append({"role": role, "content": content})
+MENU_URL = os.environ.get("GET_MENU_URL", "http://host.docker.internal:8000/tools/get_menu")
+
+
+def _raw(messages: list) -> dict:
     body = {"model": MODEL, "messages": messages, "tools": TOOLS,
             "tool_choice": "auto", "temperature": 0}
     for attempt in range(8):
@@ -60,16 +59,43 @@ def ask(turns: list[tuple[str, str]]) -> dict:
             time.sleep(min(wait + 0.5, 30))
             continue
         r.raise_for_status()
-        break
-    msg = r.json()["choices"][0]["message"]
-    calls = []
-    for tc in (msg.get("tool_calls") or []):
-        try:
-            args = json.loads(tc["function"]["arguments"] or "{}")
-        except Exception:
-            args = {}
-        calls.append({"name": tc["function"]["name"], "args": args})
-    return {"content": msg.get("content") or "", "calls": calls}
+        return r.json()["choices"][0]["message"]
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]
+
+
+def ask(turns: list[tuple[str, str]]) -> dict:
+    """Run turns; transparently resolve get_menu round-trips (execute the real endpoint,
+    feed the result back) so we assert on the FINAL spoken answer. `calls` excludes the
+    resolved get_menu and reflects only action tools (book/list/transfer)."""
+    messages = [{"role": "system", "content": SYSTEM}]
+    for role, content in turns:
+        messages.append({"role": role, "content": content})
+    for _ in range(4):
+        msg = _raw(messages)
+        tcs = msg.get("tool_calls") or []
+        if not any(tc["function"]["name"] == "get_menu" for tc in tcs):
+            calls = []
+            for tc in tcs:
+                try:
+                    args = json.loads(tc["function"]["arguments"] or "{}")
+                except Exception:
+                    args = {}
+                calls.append({"name": tc["function"]["name"], "args": args})
+            return {"content": msg.get("content") or "", "calls": calls}
+        # resolve every tool_call (get_menu for real, others stubbed) then loop for the answer
+        messages.append({"role": "assistant", "content": msg.get("content"), "tool_calls": tcs})
+        for tc in tcs:
+            if tc["function"]["name"] == "get_menu":
+                try:
+                    q = json.loads(tc["function"]["arguments"] or "{}").get("query", "")
+                except Exception:
+                    q = ""
+                res = requests.post(MENU_URL, json={"query": q}, timeout=15).text
+            else:
+                res = "{}"
+            messages.append({"role": "tool", "tool_call_id": tc["id"], "content": res})
+    return {"content": msg.get("content") or "", "calls": []}
 
 
 def _norm(s: str) -> str:  # normalize curly quotes/dashes the model loves to emit

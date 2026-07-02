@@ -17,6 +17,37 @@ def config() -> dict:
     return yaml.safe_load(_CONFIG_PATH.read_text(encoding="utf-8"))
 
 
+def menu_categories() -> list[str]:
+    """Short category names for the menu overview."""
+    return [s["section"].split(" (")[0].strip() for s in config().get("menu", [])]
+
+
+def menu_lookup(query: str) -> list[dict]:
+    """Return menu items matching a dish name / category / keyword. Small slice so the
+    tool result stays cheap in the LLM context (menu-as-tool to keep the prompt tiny)."""
+    q = (query or "").strip().lower()
+    veg = q in ("veg", "vegetarian", "veg options", "vegetarian options", "pure veg")
+    out: list[dict] = []
+    for sec in config().get("menu", []):
+        sec_name = sec["section"]
+        sec_match = bool(q) and q in sec_name.lower()
+        for it in sec["items"]:
+            name, desc = it["name"], str(it.get("desc", ""))
+            hay = f"{name} {desc} {sec_name}".lower()
+            if veg:
+                ok = ("veg" in desc.lower()) and ("non-veg" not in desc.lower())
+            else:
+                ok = sec_match or (bool(q) and all(w in hay for w in q.split()))
+            if ok:
+                out.append({
+                    "name": name,
+                    "price": it.get("price"),
+                    "desc": it.get("desc"),
+                    "category": sec_name.split(" (")[0].strip(),
+                })
+    return out
+
+
 class BookingError(ValueError):
     """Raised when a booking violates business rules (caller-facing message)."""
 

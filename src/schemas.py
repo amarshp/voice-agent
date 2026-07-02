@@ -44,7 +44,32 @@ class TransferRequest(BaseModel):
 
 
 # Tool schemas exposed to the LLM (OpenAI/Bolna/Vapi function-calling format).
+class MenuRequest(BaseModel):
+    query: str = ""
+
+
 TOOL_SCHEMAS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_menu",
+            "description": "Look up the menu. Call this for ANY question about the menu, a "
+                           "dish, prices, ingredients, veg options, or what's available — you "
+                           "do NOT have the menu memorized. Pass a dish name (e.g. 'bbq chicken "
+                           "burrito'), a category ('bowls', 'drinks', 'desserts'), a keyword "
+                           "('veg', 'spicy'), or 'overview' for the list of categories.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "dish name, category, keyword, or 'overview'",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
     {
         "type": "function",
         "function": {
