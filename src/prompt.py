@@ -11,7 +11,9 @@ from tools import config
 def _menu_lines(cfg: dict) -> str:
     out = []
     for sec in cfg.get("menu", []):
-        items = ", ".join(f"{i['name']} (Rs {i['price']})" for i in sec["items"])
+        items = "; ".join(
+            f"{i['name']} (Rs {i['price']})" + (f" — {i['desc']}" if i.get("desc") else "")
+            for i in sec["items"])
         out.append(f"  - {sec['section']}: {items}")
     return "\n".join(out)
 

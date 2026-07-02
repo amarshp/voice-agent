@@ -17,17 +17,31 @@ booking:
   max_party_size: 12
   max_days_ahead: 30
 
+# Make-it-yourself, Chipotle-style: pick a base (burrito / bowl / tacos), then a protein.
+# Signature best-sellers below. Prices approximate (₹). `desc` = ingredients for the bot.
 menu:
   - section: Burritos
     items:
-      - { name: "California Burrito", price: 289 }
-      - { name: "Paneer Tikka Burrito", price: 269 }
-      - { name: "Chicken Chipotle Burrito", price: 299 }
+      - { name: "California Burrito", price: 299, desc: "signature — grilled chicken or paneer, cilantro-lime rice, black beans, cheese, salsa, guacamole and chipotle, wrapped in a flour tortilla" }
+      - { name: "BBQ Chicken Burrito", price: 309, desc: "smoky BBQ chicken, rice, black beans, cheese, salsa, sour cream" }
+      - { name: "BBQ Paneer Burrito", price: 289, desc: "BBQ paneer, rice, beans, cheese, salsa, sour cream (veg)" }
+      - { name: "Chipotle Chicken Burrito", price: 309, desc: "chicken in homemade chipotle-in-adobo, rice, beans, cheese" }
+      - { name: "Crispy Mushroom Burrito", price: 279, desc: "crispy mushroom, rice, beans, Ooty lettuce, salsa (veg)" }
   - section: Bowls
     items:
-      - { name: "Burrito Bowl (Veg)", price: 249 }
-      - { name: "Burrito Bowl (Chicken)", price: 279 }
-  - section: Sides
+      - { name: "BBQ Chicken Bowl", price: 299, desc: "no tortilla — cilantro-lime rice, black beans, BBQ chicken, salsa, cheese, guacamole" }
+      - { name: "BBQ Paneer Bowl", price: 279, desc: "rice, beans, BBQ paneer, salsa, cheese, guacamole (veg)" }
+      - { name: "Salad Bowl", price: 269, desc: "Ooty lettuce base, beans, choice of protein, salsa, dressing" }
+  - section: Tacos & Quesadillas
     items:
-      - { name: "Nachos & Salsa", price: 149 }
-      - { name: "Cinnamon Churros", price: 129 }
+      - { name: "Chicken Tacos", price: 249, desc: "two soft tacos, grilled chicken, salsa, cheese, lettuce" }
+      - { name: "Chicken Quesadilla", price: 279, desc: "grilled tortilla, chicken, melted cheese, salsa" }
+      - { name: "Paneer Quesadilla", price: 259, desc: "grilled tortilla, paneer, melted cheese, salsa (veg)" }
+  - section: Nachos & Sides
+    items:
+      - { name: "Loaded Nachos", price: 229, desc: "corn nacho chips, queso liquid cheese, black beans, salsa, jalapenos" }
+      - { name: "Chips & Guacamole", price: 159, desc: "corn chips with fresh Coorg-avocado guacamole" }
+      - { name: "Chips & Queso", price: 149, desc: "corn chips with warm queso dip" }
+  - section: Dessert
+    items:
+      - { name: "Churros", price: 139, desc: "cinnamon-sugar churros with chocolate dip" }
