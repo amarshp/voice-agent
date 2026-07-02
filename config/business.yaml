@@ -11,6 +11,9 @@ offers:
   - { name: "Taco Tuesday", detail: "Buy 1 Get 1 Free on tacos, every Tuesday", store_only: true }
   - { name: "Unlimited Refills", detail: "Rs 79 for unlimited refills on classic drinks", store_only: true }
 
+# Outlet location — answer directly when a caller asks "where are you / your address".
+location: "Kondapur, Hyderabad"   # TODO: set your outlet's exact street address
+
 # Human fallback for escalation / transfer.
 transfer_number: "+91XXXXXXXXXX"
 
