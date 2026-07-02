@@ -9,10 +9,11 @@
 <title>California Burrito</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-  html,body{height:100%}
+  html,body{height:100%;background:#0a1216;overscroll-behavior:none}
   body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#fff;overflow:hidden;
-    background:radial-gradient(130% 80% at 50% 0%,#2f4d5c 0%,#16252c 48%,#0a1216 100%)}
-  .screen{height:100dvh;display:flex;flex-direction:column;align-items:center;
+    position:fixed;inset:0;
+    background:radial-gradient(130% 80% at 50% 0%,#2f4d5c 0%,#16252c 48%,#0a1216 100%) fixed,#0a1216}
+  .screen{height:100%;display:flex;flex-direction:column;align-items:center;
     padding:calc(env(safe-area-inset-top) + 68px) 24px calc(env(safe-area-inset-bottom) + 46px)}
   .avatar{width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;
     background:rgba(255,255,255,.13);backdrop-filter:blur(10px);box-shadow:0 10px 34px rgba(0,0,0,.35);margin-bottom:20px}
