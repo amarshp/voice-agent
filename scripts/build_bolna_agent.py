@@ -169,6 +169,16 @@ def build_payload() -> dict:
                         # require 3 words before treating it as a real interruption (default 1
                         # made the bot cut itself off on echo/one stray word)
                         "number_of_words_for_interruption": 3,
+                        # let the LLM end the call: bolna injects an `end_call` tool it invokes
+                        # (after a goodbye) once the caller is done. Needs all three keys.
+                        "hangup_after_LLMCall": True,
+                        "end_call_tool_mode": "primary",
+                        "call_cancellation_prompt": (
+                            "End the call when the caller has nothing more they need — e.g. they "
+                            "say bye / goodbye / thanks, that's all / no, that's everything, or "
+                            "after their booking or question is fully handled and they confirm "
+                            "they need nothing else. Always say a short warm goodbye first."
+                        ),
                     },
                     "toolchain": {
                         "execution": "parallel",
