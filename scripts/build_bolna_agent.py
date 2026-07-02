@@ -120,7 +120,8 @@ def _synthesizer() -> dict:
     #     bulbul:v3 -> priya, neha, ritu    (v3 = latest/best realism)
     #     bulbul:v2 -> manisha              (Sarvam labels it "warm & friendly")
     #   Supported languages: en-IN, hi-IN, and 9 more Indic codes.
-    speaker = os.environ.get("SARVAM_VOICE_ID", os.environ.get("SARVAM_VOICE", "priya"))
+    # user voice preference (blind sample test): ritu > advait > rohan (all bulbul:v3)
+    speaker = os.environ.get("SARVAM_VOICE_ID", os.environ.get("SARVAM_VOICE", "ritu"))
     # stream=False -> bolna uses Sarvam's per-request REST TTS, not a persistent
     # websocket. Avoids the 408 "socket idle too long" crash that ends the call when
     # the socket sits open with no text (no preloaded greeting) before the caller speaks.
